@@ -1,0 +1,2831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Universium</title>
+<link rel="icon" id="fav-icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #090710;
+  --bg1: #100c19;
+  --bg2: #151020;
+  --bg3: #1c1529;
+  --bd: #2a2038;
+  --bd2: #3a2c4f;
+  --ac: #b69cff;
+  --ac2: #8e6de8;
+  --ac3: #e879a7;
+  --ac4: #00e87a;
+  --ac5: #ffb800;
+  --tx: #e6dfef;
+  --tx2: #a79bb8;
+  --tx3: #6e617e;
+  --sidebar-w: 230px;
+  --topbar-h: 44px;
+  --urlbar-h: 36px;
+  --statusbar-h: 20px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--tx); font-family: 'Inter', sans-serif; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 4px; }
+
+/* ─── BOOT SCREEN ───────────────────────────────────── */
+#boot {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #000;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 20px;
+  transition: opacity .6s ease, visibility .6s ease;
+  display: none;
+}
+#boot.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+
+.boot-flash {
+  position: absolute; inset: 0; pointer-events: none;
+  display: none;
+}
+@keyframes bootflash {
+  0%   { background: #000; opacity: 1; }
+  12%  { background: #fff; opacity: 1; }
+  16%  { background: #000; opacity: 1; }
+  28%  { background: #fff; opacity: 1; }
+  33%  { background: #000; opacity: 1; }
+  100% { background: #000; opacity: 0; }
+}
+
+.boot-content {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  animation: bootin .8s .3s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes bootin { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.boot-star { animation: none; filter: none; opacity: .7; }
+@keyframes bootspin { to { transform: rotate(360deg); } }
+
+.boot-title {
+  font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.5rem;
+  letter-spacing: 8px; color: #fff;
+  text-shadow: none;
+}
+.boot-sub {
+  font-family: 'JetBrains Mono', monospace; font-size: .6rem;
+  letter-spacing: 4px; color: var(--tx3);
+  animation: breathe 1.4s ease-in-out infinite;
+}
+@keyframes breathe { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+
+.boot-bar { width: 200px; height: 2px; background: var(--bd); border-radius: 2px; overflow: hidden; }
+.boot-bar-fill {
+  height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--ac2), var(--ac), var(--ac4));
+  animation: bootbar 2.4s cubic-bezier(.4,0,.2,1) .3s forwards;
+}
+@keyframes bootbar { to { width: 100%; } }
+
+/* ─── COOKIE BANNER ──────────────────────────────────── */
+#cookie {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 8500;
+  background: var(--bg2); border: 1px solid var(--bd2); border-radius: 12px;
+  padding: 14px 18px; display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.8), 0 0 0 1px rgba(0,212,255,.06);
+  animation: ckup .4s cubic-bezier(.16,1,.3,1); max-width: 90vw;
+}
+@keyframes ckup {
+  from { transform: translateX(-50%) translateY(14px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+#cookie.gone { display: none; }
+.ck-msg { font-size: .78rem; color: var(--tx2); font-weight: 500; white-space: nowrap; }
+.ck-msg b { color: var(--tx); }
+.ck-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.ck-ok  { padding: 6px 14px; background: var(--ac2); border: none; border-radius: 7px; font-family: 'Orbitron', sans-serif; font-size: .5rem; letter-spacing: 2px; color: #fff; cursor: pointer; transition: opacity .18s; }
+.ck-ok:hover { opacity: .78; }
+.ck-no  { padding: 6px 10px; background: transparent; border: 1px solid var(--bd2); border-radius: 7px; font-family: 'Orbitron', sans-serif; font-size: .5rem; letter-spacing: 2px; color: var(--tx3); cursor: pointer; transition: all .18s; }
+.ck-no:hover { border-color: var(--ac3); color: var(--ac3); }
+
+/* ─── BACKGROUND CANVASES ────────────────────────────── */
+#cv-stars, #cv-galaxy, #cv-aurora { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+#cv-galaxy { z-index: 1; opacity: .35; }
+#cv-aurora { z-index: 2; mix-blend-mode: screen; opacity: .5; }
+
+/* ─── SETTINGS PANEL ─────────────────────────────────── */
+#settings {
+  position: fixed; inset: 0; z-index: 7500;
+  background: rgba(0,0,0,.75); backdrop-filter: blur(18px);
+  display: none; align-items: center; justify-content: center;
+}
+#settings.open { display: flex; }
+.sbox {
+  background: var(--bg2); border: 1px solid var(--bd2); border-radius: 16px;
+  width: 480px; max-width: 92vw; max-height: 80vh; overflow-y: auto; padding: 22px;
+  animation: popin .25s cubic-bezier(.16,1,.3,1);
+}
+@keyframes popin { from { transform: scale(.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.sbox-head { font-family: 'Orbitron', sans-serif; font-size: .7rem; letter-spacing: 4px; color: #fff; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
+.s-close { background: none; border: 1px solid var(--bd2); color: var(--tx3); width: 26px; height: 26px; border-radius: 7px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: .85rem; transition: all .18s; }
+.s-close:hover { border-color: var(--ac3); color: var(--ac3); }
+.s-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--bd); }
+.s-row:last-child { border: none; }
+.s-lbl { font-size: .84rem; font-weight: 500; color: var(--tx); }
+.s-desc { font-size: .68rem; color: var(--tx3); margin-top: 2px; }
+.tog { width: 36px; height: 20px; background: var(--bd2); border-radius: 10px; cursor: pointer; position: relative; transition: background .2s; border: none; flex-shrink: 0; }
+.tog::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; }
+.tog.on { background: var(--ac2); }
+.tog.on::after { transform: translateX(16px); }
+.s-row-col { flex-direction: column; align-items: flex-start; gap: 9px; }
+.link-row { display: flex; gap: 6px; width: 100%; }
+.link-row input { flex: 1; background: var(--bg1); border: 1px solid var(--bd2); border-radius: 7px; padding: 7px 10px; font-family: 'Inter', sans-serif; font-size: .8rem; color: var(--tx); outline: none; transition: border-color .18s; min-width: 0; }
+.link-row input:focus { border-color: var(--ac); }
+.link-row button { padding: 7px 12px; background: var(--ac2); border: none; border-radius: 7px; font-family: 'Orbitron', sans-serif; font-size: .48rem; letter-spacing: 2px; color: #fff; cursor: pointer; transition: opacity .18s; white-space: nowrap; }
+.link-row button:hover { opacity: .78; }
+.link-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.lchip { padding: 4px 9px; border-radius: 6px; border: 1px solid var(--bd2); background: var(--bg1); font-size: .7rem; color: var(--tx3); display: flex; align-items: center; gap: 5px; }
+.lchip button { background: none; border: none; color: var(--ac3); cursor: pointer; font-size: .7rem; padding: 0; line-height: 1; }
+
+/* ─── OS GRID ─────────────────────────────────────────── */
+#os {
+  position: fixed; inset: 0; z-index: 2;
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: var(--topbar-h) 1fr;
+}
+
+/* ─── TOPBAR ──────────────────────────────────────────── */
+#topbar {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; height: var(--topbar-h);
+  background: rgba(2,4,8,.92); border-bottom: 1px solid var(--bd);
+  backdrop-filter: blur(24px); z-index: 200; padding: 0 10px; gap: 6px;
+}
+.menu-btn {
+  width: 28px; height: 28px; border: 1px solid var(--bd); border-radius: 7px;
+  background: transparent; color: var(--tx2); cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; transition: all .16s;
+}
+.menu-btn:hover, #os.drawer-open .menu-btn { border-color: var(--ac); color: var(--ac); background: rgba(182,156,255,.08); }
+.menu-btn svg { width: 14px; height: 14px; pointer-events: none; }
+
+.t-logo {
+  display: flex; align-items: center; gap: 8px;
+  padding-right: 12px; border-right: 1px solid var(--bd);
+  margin-right: 6px; flex-shrink: 0; cursor: pointer; user-select: none;
+}
+.t-logo-icon { animation: logoshine 3s ease-in-out infinite; }
+@keyframes logoshine {
+  0%,100% { filter: drop-shadow(0 0 4px #00d4ff); }
+  50%      { filter: drop-shadow(0 0 10px #00d4ff) drop-shadow(0 0 20px #6c4dff); }
+}
+.t-logo-text {
+  font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: .68rem;
+  letter-spacing: 3px; color: #fff; white-space: nowrap;
+}
+.t-logo-text em { color: var(--ac); font-style: normal; }
+
+/* Tabs */
+#tabs { flex: 1; display: flex; align-items: center; gap: 3px; overflow-x: auto; padding: 0 4px; scrollbar-width: none; min-width: 0; }
+#tabs::-webkit-scrollbar { display: none; }
+.tab {
+  display: flex; align-items: center; gap: 5px; padding: 4px 10px;
+  border-radius: 7px; border: 1px solid transparent;
+  font-family: 'Inter', sans-serif; font-size: .74rem; font-weight: 500;
+  color: var(--tx3); cursor: pointer; transition: all .14s;
+  white-space: nowrap; max-width: 160px; min-width: 72px; flex-shrink: 0;
+}
+.tab:hover { background: rgba(255,255,255,.04); color: var(--tx); }
+.tab.active { background: var(--bg2); border-color: var(--bd2); color: #fff; }
+.tab-ico { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; object-fit: cover; display: block; }
+.tab-ico-ph { width: 13px; height: 13px; flex-shrink: 0; opacity: .35; }
+.tab-label { overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; text-align: left; }
+.tab-close {
+  width: 14px; height: 14px; border-radius: 3px; background: none; border: none;
+  color: var(--tx3); cursor: pointer; flex-shrink: 0; display: flex; align-items: center;
+  justify-content: center; font-size: .58rem; opacity: 0; transition: all .12s; padding: 0;
+}
+.tab:hover .tab-close, .tab.active .tab-close { opacity: 1; }
+.tab-close:hover { background: rgba(255,61,110,.18); color: var(--ac3); }
+
+.newtab-btn {
+  width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--bd);
+  background: transparent; color: var(--tx3); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: .95rem;
+  transition: all .18s; flex-shrink: 0; font-weight: 300;
+}
+.newtab-btn:hover { border-color: var(--ac); color: var(--ac); }
+
+/* Clock */
+#topbar-clock { display: flex; flex-direction: column; align-items: flex-end; padding: 0 10px 0 8px; border-left: 1px solid var(--bd); flex-shrink: 0; gap: 1px; }
+#clk-t { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--tx); letter-spacing: 1px; }
+#clk-d { font-family: 'JetBrains Mono', monospace; font-size: .5rem; color: var(--tx3); letter-spacing: .5px; }
+
+/* Topbar action btns */
+.t-btns { display: flex; align-items: center; gap: 5px; padding-left: 8px; border-left: 1px solid var(--bd); flex-shrink: 0; }
+.t-btn {
+  width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--bd);
+  background: transparent; color: var(--tx3); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all .16s;
+}
+.t-btn svg { width: 13px; height: 13px; pointer-events: none; flex-shrink: 0; }
+.t-btn:hover { border-color: var(--ac); color: var(--ac); box-shadow: 0 0 8px rgba(0,212,255,.16); }
+.t-btn.active { border-color: var(--ac2); color: var(--ac2); background: rgba(108,77,255,.1); }
+
+/* ─── SIDEBAR ─────────────────────────────────────────── */
+#sidebar {
+  grid-column: 1;
+  grid-row: 2;
+  background: rgba(2,4,8,.85); border-right: 1px solid var(--bd);
+  backdrop-filter: blur(20px); overflow-y: auto; overflow-x: hidden;
+  display: flex; flex-direction: column; padding-bottom: 12px; scrollbar-width: none;
+}
+#os.simple-home-shell #sidebar {
+  position: fixed; top: var(--topbar-h); bottom: 0; left: 0; width: var(--sidebar-w);
+  z-index: 500; transform: translateX(-104%);
+  transition: transform .22s cubic-bezier(.16,1,.3,1);
+  box-shadow: 18px 0 45px rgba(0,0,0,.34);
+}
+#os.simple-home-shell.drawer-open #sidebar { transform: translateX(0); }
+#sidebar-overlay {
+  display: none; position: fixed; inset: var(--topbar-h) 0 0; z-index: 490;
+  background: rgba(4,2,9,.42); backdrop-filter: blur(2px);
+}
+#os.simple-home-shell.drawer-open #sidebar-overlay { display: block; }
+#sidebar::-webkit-scrollbar { display: none; }
+.sb-sec { padding: 10px 10px 3px; font-family: 'Orbitron', sans-serif; font-size: .42rem; letter-spacing: 3px; color: var(--tx3); text-transform: uppercase; }
+.sb-item {
+  display: flex; align-items: center; gap: 9px; padding: 7px 10px; margin: 1px 5px;
+  border-radius: 8px; cursor: pointer; transition: all .14s;
+  border: 1px solid transparent; position: relative; user-select: none;
+}
+.sb-item:hover { background: rgba(255,255,255,.035); border-color: var(--bd); }
+.sb-item.active { background: rgba(0,212,255,.06); border-color: rgba(0,212,255,.14); }
+.sb-item.active::before {
+  content: ''; position: absolute; left: -5px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 55%; background: var(--ac); border-radius: 2px; box-shadow: 0 0 6px var(--ac);
+}
+.sb-icon { width: 26px; height: 26px; border-radius: 7px; background: var(--bg3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+.sb-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 7px; display: block; }
+.sb-icon svg { width: 15px; height: 15px; opacity: .55; }
+.sb-label { font-size: .78rem; font-weight: 500; color: var(--tx); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.sb-item:hover .sb-label, .sb-item.active .sb-label { color: #fff; }
+.sb-div { height: 1px; background: var(--bd); margin: 5px 10px; }
+
+/* ─── CONTENT ─────────────────────────────────────────── */
+#content {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg);
+}
+#content:has(#slot-home.active) #urlbar,
+#content:has(#slot-home.active) #statusbar { display: none; }
+#content:has(#slot-home.active) #loadbar { top: 0; }
+
+/* URL bar */
+#urlbar {
+  height: var(--urlbar-h); display: flex; align-items: center; gap: 5px;
+  padding: 0 8px; background: rgba(2,4,8,.85); border-bottom: 1px solid var(--bd);
+  flex-shrink: 0; backdrop-filter: blur(12px);
+}
+.nav-btn {
+  width: 24px; height: 24px; border-radius: 5px; border: 1px solid var(--bd);
+  background: transparent; color: var(--tx3); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: all .14s;
+}
+.nav-btn:hover { border-color: var(--ac); color: var(--ac); }
+.nav-btn svg { width: 10px; height: 10px; pointer-events: none; }
+.addr-bar {
+  flex: 1; display: flex; align-items: center; background: var(--bg1);
+  border: 1px solid var(--bd2); border-radius: 7px; overflow: hidden; height: 26px;
+  transition: border-color .18s, box-shadow .18s;
+}
+.addr-bar:focus-within { border-color: var(--ac); box-shadow: 0 0 0 1px rgba(0,212,255,.4), 0 0 14px rgba(0,212,255,.1); }
+.addr-pfx { padding: 0 7px; font-family: 'JetBrains Mono', monospace; font-size: .56rem; color: var(--ac); border-right: 1px solid var(--bd); height: 100%; display: flex; align-items: center; background: rgba(0,212,255,.04); flex-shrink: 0; white-space: nowrap; }
+#addr-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  padding: 0 9px; font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+  color: var(--tx); height: 100%; min-width: 0;
+}
+#addr-input::placeholder { color: var(--tx3); font-family: 'Inter', sans-serif; font-size: .74rem; }
+.addr-go {
+  padding: 0 11px; height: 100%; border: none; border-left: 1px solid var(--bd);
+  background: rgba(108,77,255,.1); color: var(--ac2); cursor: pointer;
+  font-family: 'Orbitron', sans-serif; font-size: .46rem; letter-spacing: 2px;
+  transition: background .18s; flex-shrink: 0;
+}
+.addr-go:hover { background: rgba(108,77,255,.22); }
+
+/* Latency */
+#lat {
+  display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 20px;
+  border: 1px solid var(--bd); border-radius: 5px; background: var(--bg1);
+  font-family: 'JetBrains Mono', monospace; font-size: .5rem; color: var(--tx3); flex-shrink: 0;
+  transition: color .3s, border-color .3s;
+}
+#lat.g { color: var(--ac4); border-color: rgba(0,232,122,.16); }
+#lat.y { color: var(--ac5); border-color: rgba(255,184,0,.16); }
+#lat.r { color: var(--ac3); border-color: rgba(255,61,110,.16); }
+#lat-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; box-shadow: 0 0 4px currentColor; }
+
+/* Load bar */
+#loadbar {
+  height: 2px; position: absolute; top: var(--urlbar-h); left: 0; right: 0; z-index: 10;
+  background: linear-gradient(90deg, var(--ac2), var(--ac), var(--ac4), var(--ac2));
+  background-size: 300%; transform: scaleX(0); transform-origin: left; transition: transform .25s;
+}
+#loadbar.on { transform: scaleX(1); animation: lbani 1s linear infinite; }
+@keyframes lbani { 0% { background-position: 100%; } 100% { background-position: -100%; } }
+
+/* Frames */
+#frames { flex: 1; position: relative; overflow: hidden; }
+.fslot { position: absolute; inset: 0; display: none; }
+.fslot.active { display: flex; flex-direction: column; }
+iframe.pf { width: 100%; flex: 1; border: none; background: #07101a; opacity: 0; transition: opacity .4s ease; }
+iframe.pf.show { opacity: 1; }
+
+/* ── Game loading overlay ── */
+.game-loader {
+  position: absolute; inset: 0; top: 34px;
+  background: #07101a;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 22px; z-index: 10; pointer-events: none;
+  transition: opacity .4s ease;
+}
+.game-loader.hidden { opacity: 0; pointer-events: none; }
+.game-loader-ring {
+  width: 54px; height: 54px;
+  border: 3px solid rgba(0,220,255,.12);
+  border-top-color: var(--ac2, #00dcff);
+  border-radius: 50%;
+  animation: glspin 1s linear infinite;
+}
+@keyframes glspin { to { transform: rotate(360deg); } }
+.game-loader-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: .55rem; letter-spacing: 4px;
+  color: var(--ac2, #00dcff); opacity: .8;
+  text-transform: uppercase;
+}
+.game-loader-sub {
+  font-family: 'Orbitron', sans-serif;
+  font-size: .38rem; letter-spacing: 3px;
+  color: rgba(255,255,255,.3);
+}
+
+/* ─── HOME SCREEN ─────────────────────────────────────── */
+.home {
+  position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
+  display: flex; flex-direction: column; align-items: center;
+  z-index: 2;
+  padding: 44px 22px 60px; gap: 22px; background: transparent;
+}
+
+/* Galaxy canvas lives inside the home slot, behind content */
+#home-galaxy {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .08;
+}
+.home > * { position: relative; z-index: 1; }
+
+.home-hero { display: flex; flex-direction: column; align-items: center; gap: 9px; animation: rise .7s cubic-bezier(.16,1,.3,1) both; }
+@keyframes rise { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.home-star-svg { animation: none; filter: none; opacity: .65; }
+.home-title {
+  font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.6rem;
+  letter-spacing: 7px; color: #fff;
+  text-shadow: none;
+}
+.home-sub { font-family: 'JetBrains Mono', monospace; font-size: .54rem; letter-spacing: 2px; color: var(--tx3); }
+
+.home-bigclock {
+  font-family: 'JetBrains Mono', monospace; font-size: 3rem;
+  color: rgba(255,255,255,.06); letter-spacing: 8px; pointer-events: none;
+  animation: rise .7s .04s cubic-bezier(.16,1,.3,1) both;
+  text-shadow: 0 0 40px rgba(0,212,255,.06);
+}
+
+.home-search {
+  width: 100%; max-width: 540px; display: flex; align-items: center;
+  background: rgba(13,10,21,.94); border: 1px solid var(--bd2);
+  border-radius: 8px; overflow: hidden; height: 44px;
+  flex-shrink: 0;
+  transition: border-color .18s, box-shadow .18s;
+  animation: rise .7s .08s cubic-bezier(.16,1,.3,1) both;
+  backdrop-filter: blur(12px);
+}
+.home-search:focus-within {
+  border-color: var(--ac);
+  box-shadow: 0 0 0 1px rgba(182,156,255,.14);
+}
+.home-search input {
+  flex: 1; background: transparent; border: none; outline: none;
+  padding: 0 18px; font-family: 'Inter', sans-serif; font-size: .92rem;
+  font-weight: 500; color: var(--tx); height: 100%;
+}
+.home-search input::placeholder { color: var(--tx3); }
+.home-search button {
+  padding: 0 20px; height: 100%; border: none; border-left: 1px solid var(--bd);
+  background: var(--ac2);
+  font-family: 'Orbitron', sans-serif; font-size: .48rem; letter-spacing: 3px;
+  color: #fff; cursor: pointer; transition: opacity .16s; white-space: nowrap;
+}
+.home-search button:hover { opacity: .78; }
+
+/* Quiet space-field home */
+#slot-home {
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(71,45,111,.14), transparent 54%),
+    #090710;
+  isolation: isolate;
+  --pointer-x: 0px;
+  --pointer-y: 0px;
+}
+#slot-home::before {
+  content: '';
+  position: absolute;
+  inset: -24%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .62;
+  transform: translate3d(var(--pointer-x), var(--pointer-y), 0) rotate(-8deg) scale(1.08);
+  transition: transform .35s ease-out;
+  background:
+    repeating-radial-gradient(ellipse 92% 54% at 11% 54%,
+      transparent 0 23px, rgba(157,124,226,.075) 24px 25px, transparent 26px 43px),
+    repeating-radial-gradient(ellipse 105% 62% at 88% 28%,
+      transparent 0 29px, rgba(129,105,201,.06) 30px 31px, transparent 32px 51px);
+}
+#slot-home::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 330px 240px at calc(50% + var(--pointer-x)) calc(48% + var(--pointer-y)),
+      rgba(120,91,192,.08), transparent 72%),
+    radial-gradient(ellipse at center, transparent 20%, rgba(5,3,10,.42) 100%);
+  transition: background .35s ease-out;
+}
+
+/* Quick grid */
+.qgrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 9px; width: 100%; max-width: 640px;
+  animation: rise .7s .14s cubic-bezier(.16,1,.3,1) both;
+}
+.qcard {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 14px 8px; border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.055);
+  background: rgba(6,11,18,.7);
+  backdrop-filter: blur(8px);
+  cursor: pointer; transition: all .18s;
+}
+.qcard:hover {
+  border-color: rgba(0,212,255,.28);
+  background: rgba(0,212,255,.05);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,212,255,.1);
+}
+.qcard:active { transform: scale(.95) translateY(0); }
+.qcard-ico {
+  width: 40px; height: 40px; border-radius: 10px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg3); flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+.qcard-ico img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: block; }
+.qcard-ico svg { width: 18px; height: 18px; opacity: .4; }
+.qcard-label { font-size: .67rem; font-weight: 500; color: var(--tx3); text-align: center; transition: color .16s; line-height: 1.2; }
+.qcard:hover .qcard-label { color: #e0eeff; }
+
+/* Focused home mode */
+.simple-home-actions { display: none; }
+#slot-home.simple-home-mode .home-bigclock,
+#slot-home.simple-home-mode .home-search,
+#slot-home.simple-home-mode #qgrid-home { display: none; }
+#slot-home.simple-home-mode .home {
+  justify-content: flex-start;
+  gap: 18px;
+  padding: clamp(34px, 8vh, 72px) 22px 70px;
+}
+#slot-home.simple-home-mode .home-hero { gap: 7px; margin-top: 4px; }
+#slot-home.simple-home-mode .home-star-svg { display: none; }
+#slot-home.simple-home-mode .home-title { font-size: 1.5rem; letter-spacing: 8px; }
+#slot-home.simple-home-mode .home-sub { letter-spacing: 2px; }
+#slot-home.simple-home-mode .home-search { display: flex; max-width: 650px; }
+#slot-home.simple-home-mode #qgrid-home { display: grid; max-width: 700px; }
+#slot-home.simple-home-mode .qcard { animation: none !important; opacity: 1 !important; }
+#slot-home.simple-home-mode .simple-home-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(116px, 142px));
+  gap: 10px;
+  width: 100%;
+  max-width: 470px;
+}
+.home-section-label {
+  width: 100%; max-width: 700px; color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace; font-size: .46rem;
+  letter-spacing: 1.8px; text-align: left; margin-top: 2px;
+}
+.home-panels {
+  width: 100%; max-width: 700px; display: grid;
+  grid-template-columns: 1.2fr .8fr; gap: 10px;
+}
+.home-panel {
+  min-width: 0; padding: 14px 15px; border: 1px solid rgba(176,145,235,.14);
+  border-radius: 9px; background: rgba(14,10,22,.58);
+  backdrop-filter: blur(8px);
+}
+.home-panel-head {
+  display: flex; justify-content: space-between; align-items: center;
+  color: var(--tx2); font-family: 'JetBrains Mono', monospace;
+  font-size: .48rem; letter-spacing: 1.5px; margin-bottom: 11px;
+}
+.home-panel-head span:last-child { color: var(--tx3); font-size: .43rem; }
+.home-tool-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.home-tool {
+  min-width: 0; padding: 9px 8px; text-align: left; border: 1px solid var(--bd);
+  border-radius: 7px; background: rgba(255,255,255,.018); color: var(--tx);
+  cursor: pointer; transition: border-color .16s, background .16s;
+}
+.home-tool:hover { border-color: var(--ac); background: rgba(182,156,255,.08); }
+.home-tool strong, .home-tool small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-tool strong { font-size: .62rem; font-weight: 600; }
+.home-tool small { margin-top: 4px; color: var(--tx3); font-size: .46rem; }
+.home-recent-list { display: grid; gap: 5px; }
+.recent-item {
+  display: flex; justify-content: space-between; gap: 8px; padding: 6px 0;
+  border-bottom: 1px solid rgba(176,145,235,.08); color: var(--tx2);
+  font-size: .62rem; cursor: pointer;
+}
+.recent-item:last-child { border-bottom: 0; }
+.recent-item:hover { color: var(--tx); }
+.recent-item small { color: var(--tx3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-empty { color: var(--tx3); font-size: .58rem; line-height: 1.5; }
+.simple-home-card {
+  min-height: 96px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid rgba(176,145,235,.17);
+  border-radius: 9px;
+  background: rgba(14,10,22,.72);
+  color: var(--tx);
+  cursor: pointer;
+  font: inherit;
+  transition: transform .18s, border-color .18s, background .18s, box-shadow .18s;
+}
+.simple-home-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--ac);
+  background: rgba(125,92,198,.12);
+  box-shadow: 0 8px 20px rgba(47,27,87,.22);
+}
+.simple-home-card:active { transform: scale(.97); }
+.simple-home-actions::before {
+  content: 'FEATURES';
+  grid-column: 1 / -1;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .46rem;
+  letter-spacing: 1.8px;
+  margin-bottom: -3px;
+}
+.simple-home-card svg { width: 25px; height: 25px; }
+.simple-home-card strong {
+  font-family: 'Orbitron', sans-serif;
+  font-size: .53rem;
+  letter-spacing: 2px;
+}
+.simple-home-card span {
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .43rem;
+  letter-spacing: 1px;
+}
+.simple-home-card.games svg { color: #8c72ff; }
+.simple-home-card.movies svg { color: #ff4f7b; }
+.simple-home-card.browser svg { color: #00d4ff; }
+@media (max-width: 640px) {
+  #slot-home.simple-home-mode .simple-home-actions {
+    grid-template-columns: 1fr;
+    max-width: 280px;
+  }
+  .simple-home-card { min-height: 86px; flex-direction: row; justify-content: flex-start; padding: 14px 20px; }
+  .simple-home-card svg { flex-shrink: 0; }
+  .simple-home-card span { margin-left: auto; }
+  .home-panels { grid-template-columns: 1fr; }
+  .home-tool-list { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ─── STATUS BAR ──────────────────────────────────────── */
+#statusbar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: var(--statusbar-h);
+  background: rgba(2,4,8,.9); border-top: 1px solid var(--bd);
+  display: flex; align-items: center; padding: 0 10px; gap: 10px; z-index: 100;
+  font-family: 'JetBrains Mono', monospace; font-size: .5rem; color: var(--tx3); letter-spacing: .5px;
+}
+.sb-led { width: 5px; height: 5px; border-radius: 50%; background: var(--ac4); box-shadow: 0 0 4px var(--ac4); }
+.sb-sep { width: 1px; height: 10px; background: var(--bd2); }
+#sb-url { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
+
+/* ─── TOAST ───────────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 26px; right: 18px; z-index: 9000;
+  background: var(--bg2); border: 1px solid var(--ac); border-radius: 8px;
+  padding: 9px 16px; font-family: 'Orbitron', sans-serif; font-size: .52rem;
+  letter-spacing: 2px; color: var(--ac);
+  box-shadow: 0 0 16px rgba(0,212,255,.22);
+  transform: translateY(12px); opacity: 0;
+  transition: all .24s cubic-bezier(.16,1,.3,1); pointer-events: none;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+
+/* ─── DEV CONSOLE ────────────────────────────────────── */
+#console-btn {
+  position: fixed; bottom: 28px; left: 24px; z-index: 500;
+  width: 34px; height: 34px; border-radius: 9px;
+  background: var(--bg2); border: 1px solid var(--bd2);
+  color: var(--ac4); cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  transition: all .18s; box-shadow: 0 4px 16px rgba(0,0,0,.5);
+}
+#console-btn:hover { border-color: var(--ac4); box-shadow: 0 0 14px rgba(0,232,122,.25); transform: translateY(-1px); }
+#console-btn svg { width: 15px; height: 15px; pointer-events: none; }
+#console-panel {
+  position: fixed; bottom: 72px; left: 24px; z-index: 499;
+  width: 490px; max-width: calc(100vw - 48px);
+  background: rgba(5,9,16,.97); border: 1px solid var(--bd2);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.8);
+  display: none; flex-direction: column; backdrop-filter: blur(24px);
+  animation: cslIn .2s cubic-bezier(.16,1,.3,1);
+}
+@keyframes cslIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+#console-panel.open { display: flex; }
+.csl-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; border-bottom: 1px solid var(--bd);
+  background: rgba(0,0,0,.3);
+}
+.csl-hd-left { display: flex; align-items: center; gap: 8px; }
+.csl-title { font-family: 'Orbitron', sans-serif; font-size: .52rem; letter-spacing: 3px; color: var(--ac4); }
+.csl-badge { font-family: 'JetBrains Mono', monospace; font-size: .5rem; padding: 2px 7px; border-radius: 4px; background: rgba(0,232,122,.1); border: 1px solid rgba(0,232,122,.2); color: var(--ac4); }
+.csl-x { background: none; border: none; color: var(--tx3); cursor: pointer; font-size: .85rem; transition: color .15s; padding: 2px 4px; border-radius: 4px; }
+.csl-x:hover { color: var(--ac3); background: rgba(255,61,110,.1); }
+.csl-out {
+  height: 200px; overflow-y: auto; padding: 10px 14px; display: flex; flex-direction: column; gap: 1px;
+  font-family: 'JetBrains Mono', monospace; font-size: .67rem; line-height: 1.65;
+  background: var(--bg1); scrollbar-width: thin; scrollbar-color: var(--bd2) transparent;
+}
+.csl-line { white-space: pre-wrap; word-break: break-all; display: flex; gap: 8px; }
+.csl-line::before { content: attr(data-prefix); opacity: .45; flex-shrink: 0; }
+.csl-line.cmd  { color: var(--tx); } .csl-line.cmd::before  { content: '>'; color: var(--ac4); opacity: 1; }
+.csl-line.res  { color: var(--ac);  } .csl-line.res::before  { content: '←'; }
+.csl-line.err  { color: var(--ac3); } .csl-line.err::before  { content: '✕'; }
+.csl-line.info { color: var(--tx3); } .csl-line.info::before { content: '·'; }
+.csl-row {
+  display: flex; align-items: flex-start; border-top: 1px solid var(--bd);
+  background: rgba(0,0,0,.2);
+}
+.csl-prompt { padding: 10px 8px 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: .68rem; color: var(--ac4); flex-shrink: 0; line-height: 1.5; user-select: none; }
+#csl-input {
+  flex: 1; background: transparent; border: none; outline: none; resize: none;
+  padding: 10px 0; font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+  color: var(--tx); line-height: 1.5; min-height: 38px; max-height: 100px;
+  scrollbar-width: thin;
+}
+#csl-input::placeholder { color: var(--tx3); }
+.csl-run { padding: 0 14px; border: none; background: transparent; cursor: pointer; color: var(--ac4); font-family: 'Orbitron', sans-serif; font-size: .48rem; letter-spacing: 2px; border-left: 1px solid var(--bd); align-self: stretch; display: flex; align-items: center; transition: background .15s; white-space: nowrap; }
+.csl-run:hover { background: rgba(0,232,122,.08); }
+
+/* ─── GAME GRID ───────────────────────────────────────── */
+.game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 16px; width: 100%; max-width: 860px; animation: rise .7s .1s cubic-bezier(.16,1,.3,1) both; }
+.game-card { border-radius: 14px; border: 1px solid var(--bd2); background: rgba(6,11,18,.9); overflow: hidden; cursor: pointer; transition: all .2s; position: relative; }
+.game-card:hover { border-color: var(--ac2); transform: translateY(-4px); box-shadow: 0 10px 30px rgba(123,97,255,.18); }
+.game-card:active { transform: scale(.97) translateY(0); }
+.game-thumb { width: 100%; aspect-ratio: 16/9; background: linear-gradient(135deg,#0d1624,#1a2a4a); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.game-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.game-play-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .18s; }
+.game-card:hover .game-play-overlay { opacity: 1; }
+.game-play-btn { width: 46px; height: 46px; border-radius: 50%; background: var(--ac2); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(123,97,255,.6); }
+.game-play-btn svg { width: 18px; height: 18px; margin-left: 3px; }
+.game-info { padding: 12px 14px; }
+.game-name { font-family: 'Orbitron', sans-serif; font-size: .62rem; letter-spacing: 2px; color: #fff; margin-bottom: 4px; }
+.game-desc { font-size: .72rem; color: var(--tx3); line-height: 1.4; }
+.game-tag { display: inline-block; margin-top: 7px; padding: 2px 8px; border-radius: 4px; font-size: .52rem; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; background: rgba(123,97,255,.1); border: 1px solid rgba(123,97,255,.22); color: var(--ac2); }
+.game-iframe-bar { height: 34px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: rgba(0,0,0,.92); border-bottom: 1px solid var(--bd); flex-shrink: 0; gap: 10px; }
+.gib-title { font-family: 'Orbitron', sans-serif; font-size: .52rem; letter-spacing: 3px; color: var(--tx3); }
+.gib-btn { padding: 4px 11px; border-radius: 6px; border: 1px solid var(--bd2); background: transparent; color: var(--tx3); cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: .46rem; letter-spacing: 2px; transition: all .15s; display: flex; align-items: center; gap: 5px; }
+.gib-btn:hover { border-color: var(--ac2); color: var(--ac2); }
+.gib-btn.danger:hover { border-color: var(--ac3); color: var(--ac3); }
+.gib-btn svg { width: 11px; height: 11px; pointer-events: none; }
+
+/* ─── MOVIES BAR ──────────────────────────────────────── */
+.movies-bar { height: 38px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; background: rgba(0,0,0,.9); border-bottom: 1px solid var(--bd); flex-shrink: 0; }
+.movies-bar-label { display: flex; align-items: center; gap: 7px; font-family: 'Orbitron', sans-serif; font-size: .52rem; letter-spacing: 3px; color: var(--ac3); }
+.movies-bar-actions { display: flex; gap: 6px; }
+.movies-btn { padding: 4px 12px; border-radius: 6px; border: 1px solid var(--bd2); background: transparent; color: var(--tx3); cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: .46rem; letter-spacing: 2px; transition: all .15s; display: flex; align-items: center; gap: 5px; }
+.movies-btn:hover { border-color: var(--bd2); color: var(--tx); }
+.movies-btn.red { border-color: rgba(255,61,110,.2); color: var(--ac3); }
+.movies-btn.red:hover { background: rgba(255,61,110,.08); box-shadow: 0 0 10px rgba(255,61,110,.12); }
+.movies-btn svg { width: 12px; height: 12px; pointer-events: none; }
+
+/* ─── MICRO ANIMATIONS ───────────────────────────────── */
+.sb-item { transition: all .18s cubic-bezier(.16,1,.3,1); }
+.sb-item:hover { transform: translateX(3px); }
+.sb-item:active { transform: translateX(3px) scale(.97); }
+.sb-item.active::before { animation: ledpulse 2.4s ease-in-out infinite; }
+@keyframes ledpulse {
+  0%,100% { box-shadow: 0 0 4px var(--ac); opacity: .7; }
+  50%      { box-shadow: 0 0 12px var(--ac), 0 0 22px rgba(182,156,255,.3); opacity: 1; }
+}
+
+.qcard { transition: all .22s cubic-bezier(.16,1,.3,1); }
+.qcard:hover { transform: translateY(-5px) scale(1.03); box-shadow: 0 14px 32px rgba(142,109,232,.16), 0 0 0 1px rgba(182,156,255,.12); }
+
+.game-card { transition: all .22s cubic-bezier(.16,1,.3,1); }
+.game-card:hover { transform: translateY(-6px) scale(1.02); }
+
+.t-btn { transition: all .16s cubic-bezier(.16,1,.3,1); }
+.t-btn:hover { transform: scale(1.12); }
+.t-btn:active { transform: scale(.95); }
+
+.newtab-btn { transition: all .16s cubic-bezier(.16,1,.3,1); }
+.newtab-btn:hover { transform: scale(1.15) rotate(90deg); }
+
+.nav-btn, .addr-go { position: relative; overflow: hidden; }
+.nav-btn::after, .addr-go::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: rgba(182,156,255,.14); opacity: 0; transform: scale(0);
+  transition: transform .3s, opacity .3s;
+}
+.nav-btn:active::after, .addr-go:active::after { transform: scale(2.2); opacity: 1; transition: 0s; }
+
+.home-search:focus-within { animation: searchglow 2s ease-in-out infinite; }
+@keyframes searchglow {
+  0%,100% { box-shadow: 0 0 0 1px rgba(182,156,255,.18), 0 0 28px rgba(142,109,232,.1); }
+  50%      { box-shadow: 0 0 0 1px rgba(182,156,255,.38), 0 0 42px rgba(142,109,232,.2); }
+}
+
+@keyframes tabslide { from { opacity: 0; transform: translateY(-4px) scale(.94); } to { opacity: 1; transform: none; } }
+.tab { animation: tabslide .16s cubic-bezier(.16,1,.3,1); }
+
+.simple-home-card { transition: transform .18s cubic-bezier(.16,1,.3,1), border-color .18s, background .18s, box-shadow .18s; }
+
+/* ─── AI CHAT PANEL ──────────────────────────────────── */
+#ai-btn {
+  position: fixed; bottom: 70px; right: 18px; z-index: 6000;
+  width: 38px; height: 38px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--ac2), var(--ac));
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(142,109,232,.45), 0 0 0 1px rgba(142,109,232,.25);
+  transition: all .2s cubic-bezier(.16,1,.3,1);
+}
+#ai-btn:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(142,109,232,.65); }
+#ai-btn:active { transform: scale(.94); }
+#ai-btn svg { width: 17px; height: 17px; pointer-events: none; }
+
+#ai-panel {
+  position: fixed; bottom: 116px; right: 18px; z-index: 5999;
+  width: 340px; max-width: calc(100vw - 36px);
+  background: rgba(12,9,20,.97); border: 1px solid var(--bd2);
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,.85), 0 0 0 1px rgba(142,109,232,.1);
+  display: none; flex-direction: column; backdrop-filter: blur(28px);
+  animation: aiPanelIn .22s cubic-bezier(.16,1,.3,1);
+}
+@keyframes aiPanelIn { from { transform: translateY(14px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+#ai-panel.open { display: flex; }
+
+.ai-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-bottom: 1px solid var(--bd);
+  background: rgba(0,0,0,.3); flex-shrink: 0;
+}
+.ai-hd-left { display: flex; align-items: center; gap: 8px; }
+.ai-hd-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ac); box-shadow: 0 0 6px var(--ac); animation: ledpulse 2s ease-in-out infinite; }
+.ai-title { font-family: 'Orbitron', sans-serif; font-size: .52rem; letter-spacing: 3px; color: var(--ac); }
+.ai-close { background: none; border: none; color: var(--tx3); cursor: pointer; font-size: .85rem; padding: 2px 5px; border-radius: 4px; transition: all .14s; }
+.ai-close:hover { color: var(--ac3); background: rgba(232,121,167,.1); }
+
+.ai-msgs {
+  flex: 1; overflow-y: auto; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  font-family: 'Inter', sans-serif; font-size: .8rem; line-height: 1.55;
+  min-height: 220px; max-height: 360px;
+  scrollbar-width: thin; scrollbar-color: var(--bd2) transparent;
+}
+.ai-msg { display: flex; flex-direction: column; }
+.ai-msg.user { align-items: flex-end; }
+.ai-msg.bot  { align-items: flex-start; }
+.ai-bubble { padding: 8px 12px; border-radius: 10px; max-width: 88%; word-break: break-word; line-height: 1.5; }
+.ai-msg.user .ai-bubble { background: rgba(142,109,232,.22); border: 1px solid rgba(142,109,232,.28); color: var(--tx); border-bottom-right-radius: 3px; }
+.ai-msg.bot  .ai-bubble { background: rgba(182,156,255,.06); border: 1px solid rgba(182,156,255,.1);  color: var(--tx); border-bottom-left-radius: 3px; }
+
+.ai-typing { display: flex; gap: 4px; align-items: center; padding: 8px 12px; }
+.ai-dot-1,.ai-dot-2,.ai-dot-3 { width: 5px; height: 5px; border-radius: 50%; background: var(--ac); opacity: .4; animation: aidot 1.2s ease-in-out infinite; }
+.ai-dot-2 { animation-delay: .2s; } .ai-dot-3 { animation-delay: .4s; }
+@keyframes aidot { 0%,80%,100%{transform:scale(.8);opacity:.3} 40%{transform:scale(1.1);opacity:.9} }
+
+.ai-row { display: flex; align-items: flex-end; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--bd); background: rgba(0,0,0,.18); flex-shrink: 0; }
+#ai-input {
+  flex: 1; background: var(--bg1); border: 1px solid var(--bd2);
+  border-radius: 8px; padding: 7px 10px; resize: none;
+  font-family: 'Inter', sans-serif; font-size: .8rem; color: var(--tx);
+  outline: none; min-height: 36px; max-height: 90px;
+  scrollbar-width: thin; line-height: 1.4; transition: border-color .16s;
+}
+#ai-input:focus { border-color: var(--ac); }
+#ai-input::placeholder { color: var(--tx3); }
+#ai-send {
+  width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--ac2), var(--ac));
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .16s; opacity: .72;
+}
+#ai-send:hover { opacity: 1; transform: scale(1.07); }
+#ai-send:disabled { opacity: .28; transform: none; cursor: default; }
+#ai-send svg { width: 14px; height: 14px; pointer-events: none; }
+
+</style>
+</head>
+<body>
+
+<!-- BOOT -->
+<div id="boot">
+  <div class="boot-flash"></div>
+  <div class="boot-content">
+    <svg class="boot-star" width="56" height="56" viewBox="0 0 56 56" fill="none">
+      <polygon points="28,3 33.5,20 52,20 38,31 43.5,48 28,38 12.5,48 18,31 4,20 22.5,20" fill="#00d4ff" opacity=".9"/>
+      <polygon points="28,3 33.5,20 52,20 38,31 43.5,48 28,38 12.5,48 18,31 4,20 22.5,20" fill="none" stroke="#6c4dff" stroke-width="1.4" opacity=".6"/>
+    </svg>
+    <div class="boot-title">UNIVERSIUM</div>
+    <div class="boot-sub">BOOTING UNIVERSIUM...</div>
+    <div class="boot-bar"><div class="boot-bar-fill"></div></div>
+  </div>
+</div>
+
+<!-- BG CANVASES -->
+<canvas id="cv-stars"></canvas>
+<canvas id="cv-galaxy"></canvas>
+<canvas id="cv-aurora"></canvas>
+
+<!-- COOKIE -->
+<div id="cookie">
+  <div class="ck-msg"><b>Universium</b> saves your settings &amp; custom links locally.</div>
+  <div class="ck-btns">
+    <button class="ck-ok" onclick="ckOK()">ACCEPT</button>
+    <button class="ck-no" onclick="ckNo()">DECLINE</button>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings">
+  <div class="sbox">
+    <div class="sbox-head">
+      <span>SETTINGS</span>
+      <button class="s-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="s-row">
+      <div><div class="s-lbl">Tab Cloaking</div><div class="s-desc">Disguise the tab title</div></div>
+      <button class="tog" id="tog-cloak" onclick="togSetting('cloak')"></button>
+    </div>
+    <div class="s-row s-row-col" id="cloak-name-row" style="display:none">
+      <div><div class="s-lbl">Cloak Name</div><div class="s-desc">What the tab title shows when cloaking is on</div></div>
+      <div class="link-row">
+        <input id="cloak-name-inp" type="text" placeholder="e.g. Google Classroom" maxlength="80">
+        <button onclick="saveCloakName()">SAVE</button>
+      </div>
+    </div>
+    <div class="s-row">
+      <div><div class="s-lbl">Ad Blocking</div><div class="s-desc">Block ads and trackers on proxied sites</div></div>
+      <button class="tog on" id="tog-adblock" onclick="togSetting('adblock')"></button>
+    </div>
+    <div class="s-row">
+      <div><div class="s-lbl">Shooting Stars</div><div class="s-desc">Occasional shooting stars in background</div></div>
+      <button class="tog on" id="tog-stars" onclick="togSetting('stars')"></button>
+    </div>
+    <div class="s-row">
+      <div><div class="s-lbl">Simple Home</div><div class="s-desc">Show only Games, Movies, and Browser on Home</div></div>
+      <button class="tog" id="tog-simple-home" onclick="togSetting('simpleHome')"></button>
+    </div>
+    <div class="s-row s-row-col">
+      <div><div class="s-lbl">Custom Logo</div><div class="s-desc">Enter any site URL to use its logo as the app icon</div></div>
+      <div class="link-row">
+        <input id="logo-url-inp" type="text" placeholder="e.g. google.com or https://example.com" maxlength="200">
+        <button onclick="saveLogoURL()">SAVE</button>
+      </div>
+    </div>
+    <div class="s-row s-row-col">
+      <div><div class="s-lbl">Custom Quick Links</div><div class="s-desc">Add sites to your home screen grid</div></div>
+      <div class="link-row">
+        <input id="ln" type="text" placeholder="Name  (e.g. Twitch)">
+        <input id="lu" type="text" placeholder="URL  (e.g. twitch.tv)">
+        <button onclick="addLink()">ADD</button>
+      </div>
+      <div class="link-chips" id="link-chips"></div>
+    </div>
+  </div>
+</div>
+
+<!-- OS -->
+<div id="os">
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()" title="Open menu" aria-label="Open menu">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+        <path d="M2 4h12M2 8h12M2 12h12"/>
+      </svg>
+    </button>
+    <div class="t-logo" onclick="goHome()">
+      <svg class="t-logo-icon" id="t-logo-svg" width="18" height="18" viewBox="0 0 24 24" fill="#00d4ff">
+        <polygon points="12,2 14.4,9 22,9 16,13.5 18.4,21 12,17 5.6,21 8,13.5 2,9 9.6,9"/>
+      </svg>
+      <img id="t-logo-img" style="display:none;width:20px;height:20px;border-radius:4px;object-fit:contain;" alt="">
+      <span class="t-logo-text">UNIVERSI<em>UM</em></span>
+    </div>
+
+    <div id="tabs"></div>
+    <button class="newtab-btn" onclick="newTab()" title="New Tab  Ctrl+T">+</button>
+
+    <div id="topbar-clock">
+      <span id="clk-t">00:00</span>
+      <span id="clk-d">MON 01 JAN</span>
+    </div>
+
+    <div class="t-btns">
+      <button class="t-btn" onclick="openBlanker()" title="About:blank tab  [B]">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3">
+          <rect x="1" y="1" width="12" height="12" rx="2"/>
+          <line x1="1" y1="4.5" x2="13" y2="4.5"/>
+          <circle cx="3.5" cy="2.8" r=".7" fill="currentColor" stroke="none"/>
+          <circle cx="5.8" cy="2.8" r=".7" fill="currentColor" stroke="none"/>
+          <circle cx="8.1" cy="2.8" r=".7" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+      <button class="t-btn" id="fs-btn" onclick="toggleFS()" title="Fullscreen  [F]">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3">
+          <polyline points="8.5,1 13,1 13,5.5"/>
+          <polyline points="5.5,13 1,13 1,8.5"/>
+          <line x1="13" y1="1" x2="8" y2="6"/>
+          <line x1="1" y1="13" x2="6" y2="8"/>
+        </svg>
+      </button>
+      <button class="t-btn" onclick="openSettings()" title="Settings">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
+          <circle cx="7" cy="7" r="2.2"/>
+          <path d="M7 1v1.8M7 11.2V13M1 7h1.8M11.2 7H13M2.6 2.6l1.3 1.3M10.1 10.1l1.3 1.3M2.6 11.4l1.3-1.3M10.1 3.9l1.3-1.3"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-sec">Navigation</div>
+    <div class="sb-item active" id="sb-home" onclick="goHome()">
+      <div class="sb-icon">
+        <svg viewBox="0 0 20 20" fill="none" stroke="#00d4ff" stroke-width="1.5">
+          <path d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1z"/>
+          <polyline points="7,18 7,12 13,12 13,18"/>
+        </svg>
+      </div>
+      <div class="sb-label">Home</div>
+    </div>
+    <div class="sb-div"></div>
+    <div class="sb-sec">Sites</div>
+    <div class="sb-item" onclick="go('chatgpt.com')"><div class="sb-icon"><img src="https://www.google.com/s2/favicons?domain=chatgpt.com&sz=32" alt=""></div><div class="sb-label">ChatGPT</div></div>
+    <div class="sb-item" onclick="go('tiktok.com')"><div class="sb-icon"><img src="https://www.google.com/s2/favicons?domain=tiktok.com&sz=32" alt=""></div><div class="sb-label">TikTok</div></div>
+    <div class="sb-item" onclick="go('youtube.com')"><div class="sb-icon"><img src="https://www.google.com/s2/favicons?domain=youtube.com&sz=32" alt=""></div><div class="sb-label">YouTube</div></div>
+    <div class="sb-item" onclick="go('crazygames.com')"><div class="sb-icon"><img src="https://www.google.com/s2/favicons?domain=crazygames.com&sz=32" alt=""></div><div class="sb-label">CrazyGames</div></div>
+    <div class="sb-item" onclick="go('github.com')"><div class="sb-icon"><img src="https://www.google.com/s2/favicons?domain=github.com&sz=32" alt=""></div><div class="sb-label">GitHub</div></div>
+    <div class="sb-div"></div>
+    <div class="sb-sec">Games</div>
+    <div class="sb-item" onclick="go('now.gg')"><div class="sb-icon"><img src="https://www.google.com/s2/favicons?domain=now.gg&sz=32" alt=""></div><div class="sb-label">now.gg</div></div>
+    <div class="sb-item" onclick="go('play.geforcenow.com')"><div class="sb-icon"><img src="https://www.google.com/s2/favicons?domain=geforcenow.com&sz=32" alt=""></div><div class="sb-label">GeForce Now</div></div>
+    <div class="sb-div"></div>
+    <div class="sb-sec">More</div>
+    <div class="sb-item" onclick="go('twitch.tv')"><div class="sb-icon"><img src="https://www.google.com/s2/favicons?domain=twitch.tv&sz=32" alt=""></div><div class="sb-label">Twitch</div></div>
+    <div class="sb-item" onclick="go('open.spotify.com')"><div class="sb-icon"><img src="https://www.google.com/s2/favicons?domain=open.spotify.com&sz=32" alt=""></div><div class="sb-label">Spotify</div></div>
+    <div id="sb-custom"></div>
+    <div class="sb-div"></div>
+    <div class="sb-sec">Games</div>
+    <div class="sb-item" id="sb-games" onclick="openGames()">
+      <div class="sb-icon">
+        <svg viewBox="0 0 20 20" fill="none" stroke="#7b61ff" stroke-width="1.5">
+          <rect x="2" y="6" width="16" height="10" rx="2"/>
+          <path d="M7 11h2m1-1v2M14 11h.01M16 11h.01"/>
+          <path d="M8 4h4"/>
+        </svg>
+      </div>
+      <div class="sb-label">Games</div>
+    </div>
+    <div class="sb-div"></div>
+    <div class="sb-sec">Media</div>
+    <div class="sb-item" id="sb-movies" onclick="openMovies()">
+      <div class="sb-icon">
+        <svg viewBox="0 0 20 20" fill="none" stroke="#ff3d6e" stroke-width="1.5">
+          <rect x="2" y="3" width="16" height="14" rx="2"/>
+          <path d="M2 7h16M6 3v4M10 3v4M14 3v4M6 11h.01M10 11h.01M14 11h.01M6 14h.01M10 14h.01M14 14h.01"/>
+        </svg>
+      </div>
+      <div class="sb-label">Movies</div>
+    </div>
+  </div>
+
+  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- CONTENT -->
+  <div id="content">
+    <div id="urlbar">
+      <button class="nav-btn" onclick="histBack()" title="Back"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="7,1 3,5 7,9"/></svg></button>
+      <button class="nav-btn" onclick="histFwd()"  title="Forward"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="3,1 7,5 3,9"/></svg></button>
+      <button class="nav-btn" onclick="reloadTab()" title="Reload"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5a4 4 0 11-1-2.5"/><polyline points="9,1 9,3.5 6.5,3.5"/></svg></button>
+      <div class="addr-bar">
+        <div class="addr-pfx">HTTPS://</div>
+        <input id="addr-input" type="text" placeholder="Search or enter a URL..." autocomplete="off" spellcheck="false">
+        <button class="addr-go" onclick="navFromBar()">GO</button>
+      </div>
+      <div id="lat"><div id="lat-dot"></div><span id="lat-val">—</span></div>
+      <button class="nav-btn" onclick="openInNewTab()" title="Open in new tab"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4.5 1.5H1.5v7h7V5.5"/><path d="M6 1.5h2.5v2.5"/><line x1="8.5" y1="1.5" x2="5" y2="5"/></svg></button>
+    </div>
+    <div id="loadbar"></div>
+
+    <div id="frames">
+      <div class="fslot active" id="slot-home">
+        <canvas id="home-galaxy"></canvas>
+        <div class="home">
+          <div class="home-hero">
+            <svg class="home-star-svg" width="44" height="44" viewBox="0 0 52 52" fill="none">
+              <polygon points="26,3 31,18 48,18 35,29 40,46 26,37 12,46 17,29 4,18 21,18" fill="#00d4ff" opacity=".85"/>
+              <polygon points="26,3 31,18 48,18 35,29 40,46 26,37 12,46 17,29 4,18 21,18" fill="none" stroke="#6c4dff" stroke-width="1.2" opacity=".55"/>
+            </svg>
+            <div class="home-title">UNIVERSIUM</div>
+            <div class="home-sub">BOOKMARKS · GAMES · MOVIES</div>
+          </div>
+          <div class="home-bigclock" id="bigclock">00:00:00</div>
+          <div class="home-search">
+            <input id="home-inp" type="text" placeholder="Search the web or paste a link" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') homeGo()">
+            <button onclick="homeGo()">GO</button>
+          </div>
+          <div class="home-section-label">QUICK ACCESS</div>
+          <div class="qgrid" id="qgrid-home"></div>
+          <div class="home-panels">
+            <section class="home-panel">
+              <div class="home-panel-head"><span>OPEN SOMETHING</span><span>SHORTCUTS</span></div>
+              <div class="home-tool-list">
+                <button class="home-tool" onclick="openGames()"><strong>Games</strong><small>Play library</small></button>
+                <button class="home-tool" onclick="openMovies()"><strong>Movies</strong><small>IcyStreaming</small></button>
+                <button class="home-tool" onclick="newTab()"><strong>Browser</strong><small>New tab</small></button>
+              </div>
+            </section>
+            <section class="home-panel">
+              <div class="home-panel-head"><span>RECENT</span><span id="recent-count">0</span></div>
+              <div class="home-recent-list" id="home-recent">
+                <div class="recent-empty">Sites you open will show up here.</div>
+              </div>
+            </section>
+          </div>
+          <div class="simple-home-actions" aria-label="Home shortcuts">
+            <button class="simple-home-card games" onclick="openGames()">
+              <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="5" y="12" width="30" height="19" rx="5"/>
+                <path d="M13 21h6m-3-3v6M26 20h.01M30 24h.01"/>
+                <path d="M15 12V8h10v4"/>
+              </svg>
+              <strong>GAMES</strong><span>OPEN LIBRARY</span>
+            </button>
+            <button class="simple-home-card movies" onclick="openMovies()">
+              <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="6" y="8" width="28" height="24" rx="4"/>
+                <path d="M6 15h28M13 8v7M20 8v7M27 8v7"/>
+              </svg>
+              <strong>MOVIES</strong><span>OPEN MOVIES</span>
+            </button>
+            <button class="simple-home-card browser" onclick="newTab()">
+              <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="5" y="7" width="30" height="26" rx="4"/>
+                <path d="M5 14h30M11 10.5h.01M15 10.5h.01M19 10.5h.01"/>
+                <path d="m15 24 4-4 4 4m-4-4v10"/>
+              </svg>
+              <strong>BROWSER</strong><span>START BROWSING</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GAMES SLOT -->
+      <div class="fslot" id="slot-games">
+        <div class="home" style="gap:20px">
+          <div class="home-hero" style="animation:none;gap:8px">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <rect x="2" y="10" width="36" height="24" rx="6" fill="#7b61ff" opacity=".15"/>
+              <rect x="2" y="10" width="36" height="24" rx="6" stroke="#7b61ff" stroke-width="1.5"/>
+              <path d="M12 22h4m-2-2v4M26 22h.01M30 22h.01" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16 8h8" stroke="#7b61ff" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <div class="home-title" style="font-size:1.3rem;letter-spacing:5px">GAMES</div>
+            <div class="home-sub">CLICK A GAME TO LAUNCH · CTRL+F TO FULLSCREEN</div>
+          </div>
+          <div class="game-grid" id="game-grid"></div>
+        </div>
+      </div>
+
+      <!-- MOVIES SLOT -->
+      <div class="fslot" id="slot-movies">
+        <div class="movies-bar">
+          <span class="movies-bar-label">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="16" height="14" rx="2"/><path d="M2 7h16M6 3v4M10 3v4M14 3v4"/></svg>
+            ICY STREAMING — MOVIES &amp; TV
+          </span>
+          <div class="movies-bar-actions">
+            <button class="movies-btn" onclick="moviesBlanker()" title="Blanker">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1" y="1" width="12" height="12" rx="2"/><line x1="1" y1="4.5" x2="13" y2="4.5"/><circle cx="3.2" cy="2.8" r=".6" fill="currentColor" stroke="none"/><circle cx="5.2" cy="2.8" r=".6" fill="currentColor" stroke="none"/></svg>
+              BLANKER
+            </button>
+            <button class="movies-btn accent" onclick="moviesFS()" title="Fullscreen">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><polyline points="8.5,1 13,1 13,5.5"/><polyline points="5.5,13 1,13 1,8.5"/><line x1="13" y1="1" x2="8" y2="6"/><line x1="1" y1="13" x2="6" y2="8"/></svg>
+              FULLSCREEN
+            </button>
+          </div>
+        </div>
+        <iframe id="movies-frame" class="pf" style="flex:1;opacity:1"
+          allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;fullscreen"
+          allowfullscreen></iframe>
+      </div>
+    </div>
+
+    <div id="statusbar">
+      <div class="sb-led"></div>
+      <span id="sb-status">READY</span>
+      <div class="sb-sep"></div>
+      <span id="sb-url"></span>
+      <div class="sb-sep"></div>
+      <span id="sb-session">00:00</span>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- AI CHAT -->
+<button id="ai-btn" onclick="toggleAI()" title="Chat">
+  <svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.5">
+    <path d="M3 5a2 2 0 012-2h10a2 2 0 012 2v7a2 2 0 01-2 2H7l-4 3V5z"/>
+    <circle cx="7.5" cy="8.5" r=".7" fill="#fff" stroke="none"/>
+    <circle cx="10" cy="8.5" r=".7" fill="#fff" stroke="none"/>
+    <circle cx="12.5" cy="8.5" r=".7" fill="#fff" stroke="none"/>
+  </svg>
+</button>
+
+<div id="ai-panel">
+  <div class="ai-hd">
+    <div class="ai-hd-left">
+      <div class="ai-hd-dot"></div>
+      <span class="ai-title">ASSISTANT</span>
+    </div>
+    <button class="ai-close" onclick="toggleAI()">✕</button>
+  </div>
+  <div class="ai-msgs" id="ai-msgs">
+    <div class="ai-msg bot"><div class="ai-bubble">Hey. Ask me anything — site lookup, help with something, whatever.</div></div>
+  </div>
+  <div class="ai-row">
+    <textarea id="ai-input" placeholder="Ask anything..." rows="1" spellcheck="false"></textarea>
+    <button id="ai-send" onclick="aiSend()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.6">
+        <line x1="2" y1="8" x2="13" y2="8"/>
+        <polyline points="9,4 13,8 9,12"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- DEV CONSOLE -->
+<button id="console-btn" onclick="toggleConsole()" title="Dev Console">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+    <polyline points="2,4 6,8 2,12"/>
+    <line x1="8" y1="12" x2="14" y2="12"/>
+  </svg>
+</button>
+
+<div id="console-panel">
+  <div class="csl-hd">
+    <div class="csl-hd-left">
+      <span class="csl-title">CONSOLE</span>
+      <span class="csl-badge">JS</span>
+    </div>
+    <button class="csl-x" onclick="closeConsole()">✕</button>
+  </div>
+  <div class="csl-out" id="csl-out">
+    <div class="csl-line info">Universium dev console — type JS and press RUN or Ctrl+Enter</div>
+  </div>
+  <div class="csl-row">
+    <span class="csl-prompt">&gt;</span>
+    <textarea id="csl-input" placeholder="Enter JavaScript..." rows="1" spellcheck="false" autocomplete="off"></textarea>
+    <button class="csl-run" onclick="runConsole()">RUN</button>
+  </div>
+</div>
+
+<!-- UV scripts served from node_modules via uvPath in server.js -->
+<script src="/uv/uv.bundle.js"  onerror="window._uvFail=true;console.error('uv.bundle.js not found — run npm install')"></script>
+<script src="/uv/uv.config.js"  onerror="window._uvFail=true"></script>
+<script src="/baremux/index.js" onerror="window._uvFail=true;console.error('baremux not found — run npm install')"></script>
+
+<script>
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   UV INIT — runs once on page load
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+window._uvReady = false;
+
+(async () => {
+  if (window._uvFail || typeof __uv$config === 'undefined') {
+    console.error('[UV] Scripts not found. Did you run  npm install  and  npm start ?');
+    return;
+  }
+  if (!navigator.serviceWorker) {
+    console.error('[UV] Service workers not supported in this browser/context.');
+    return;
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js', {
+      scope: __uv$config.prefix,
+      updateViaCache: 'none',
+    });
+
+    // Wait for SW to activate
+    await new Promise(resolve => {
+      if (reg.active) { resolve(); return; }
+      const pending = reg.installing || reg.waiting;
+      if (pending) {
+        pending.addEventListener('statechange', e => {
+          if (e.target.state === 'activated') resolve();
+        });
+      } else {
+        reg.addEventListener('updatefound', () => {
+          reg.installing.addEventListener('statechange', e => {
+            if (e.target.state === 'activated') resolve();
+          });
+        });
+      }
+      setTimeout(resolve, 5000); // don't wait forever
+    });
+
+    // Set up bare/wisp transport
+    const conn = new BareMux.BareMuxConnection('/baremux/worker.js');
+    const existing = await conn.getTransport();
+    if (!existing) {
+      const wisp = (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/wisp/';
+      await conn.setTransport('/epoxy/index.mjs', [{ wisp }]);
+    }
+
+    window._uvReady = true;
+    document.getElementById('sb-status').textContent = 'PROXY READY';
+    console.log('[UV] Ready ✓');
+  } catch (err) {
+    console.error('[UV] Init failed:', err.message);
+  }
+})();
+</script>
+
+<!-- BACKGROUND: WebGL stars + 2D galaxy + shooting stars -->
+<script>
+(function () {
+  /* ── WebGL twinkling starfield ─────────────────────── */
+  const glc = document.getElementById('cv-stars');
+  const gl  = glc.getContext('webgl') || glc.getContext('experimental-webgl');
+
+  function resizeGL() { glc.width = innerWidth; glc.height = innerHeight; if (gl) gl.viewport(0,0,glc.width,glc.height); }
+  addEventListener('resize', resizeGL); resizeGL();
+
+  if (gl) {
+    const vert = `attribute vec2 aP; attribute float aS; attribute float aB;
+      uniform vec2 uR; varying float vB;
+      void main(){vB=aB;vec2 c=(aP/uR)*2.0-1.0;c.y=-c.y;gl_Position=vec4(c,0,1);gl_PointSize=aS;}`;
+    const frag = `precision mediump float; varying float vB; uniform float uT;
+      void main(){vec2 co=gl_PointCoord-.5;float d=length(co);if(d>.5)discard;
+        float tw=sin(uT*vB*2.0+vB*7.0)*.26+.74;
+        float a=(0.5-d)*2.0*vB*tw; gl_FragColor=vec4(.78+vB*.2,.88+vB*.1,1.,a);}`;
+
+    const mkS = (t,s)=>{ const x=gl.createShader(t); gl.shaderSource(x,s); gl.compileShader(x); return x; };
+    const prog = gl.createProgram();
+    gl.attachShader(prog, mkS(gl.VERTEX_SHADER, vert));
+    gl.attachShader(prog, mkS(gl.FRAGMENT_SHADER, frag));
+    gl.linkProgram(prog); gl.useProgram(prog);
+
+    const N = 160; // reduced: 260→160 — imperceptible diff, ~38% fewer GPU uploads
+    const pos = new Float32Array(N*2), sz = new Float32Array(N), br = new Float32Array(N), sp = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      pos[i*2]   = Math.random() * innerWidth;
+      pos[i*2+1] = Math.random() * innerHeight;
+      sz[i] = Math.random() * 2.0 + 0.3;
+      br[i] = Math.random() * 0.5 + 0.35;
+      sp[i] = Math.random() * 0.25 + 0.04;
+    }
+    const pb=gl.createBuffer(), sb=gl.createBuffer(), bb=gl.createBuffer();
+    const aP=gl.getAttribLocation(prog,'aP'), aS=gl.getAttribLocation(prog,'aS'), aB=gl.getAttribLocation(prog,'aB');
+    const uR=gl.getUniformLocation(prog,'uR'), uT=gl.getUniformLocation(prog,'uT');
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    // Upload static buffers once
+    gl.bindBuffer(gl.ARRAY_BUFFER, sb); gl.bufferData(gl.ARRAY_BUFFER, sz, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bb); gl.bufferData(gl.ARRAY_BUFFER, br, gl.STATIC_DRAW);
+
+    let t = 0, glLast = 0;
+    (function drawGL(now){
+      requestAnimationFrame(drawGL);
+      if (now - glLast < 28) return; // ~36fps cap — was uncapped
+      glLast = now;
+      t += .012;
+      gl.clearColor(0,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.uniform2f(uR, glc.width, glc.height); gl.uniform1f(uT, t);
+      for (let i = 0; i < N; i++) {
+        pos[i*2+1] += sp[i] * .05;
+        if (pos[i*2+1] > glc.height + 4) { pos[i*2+1] = -4; pos[i*2] = Math.random() * glc.width; }
+      }
+      gl.bindBuffer(gl.ARRAY_BUFFER, pb); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(aP); gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, sb);
+      gl.enableVertexAttribArray(aS); gl.vertexAttribPointer(aS,1,gl.FLOAT,false,0,0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, bb);
+      gl.enableVertexAttribArray(aB); gl.vertexAttribPointer(aB,1,gl.FLOAT,false,0,0);
+      gl.drawArrays(gl.POINTS, 0, N);
+    })(0);
+  }
+
+  /* ── Galaxy + shooting stars on 2D canvas ─────────── */
+  const c2  = document.getElementById('cv-galaxy');
+  const ctx = c2.getContext('2d');
+  let W = 0, H = 0;
+
+  function drawGalaxy() {
+    W = c2.width = innerWidth; H = c2.height = innerHeight;
+    ctx.clearRect(0, 0, W, H);
+
+    // Galaxy center — bottom-right quadrant, large and visible
+    const gx = W * 0.80, gy = H * 0.65;
+    const R  = Math.min(W, H) * 0.32;
+
+    // Diffuse outer glow
+    const g1 = ctx.createRadialGradient(gx,gy,0,gx,gy,R*1.2);
+    g1.addColorStop(0,   'rgba(108,77,255,0.09)');
+    g1.addColorStop(0.4, 'rgba(0,212,255,0.05)');
+    g1.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(gx, gy, R*1.2, 0, Math.PI*2);
+    ctx.fillStyle = g1; ctx.fill();
+
+    // Bright core
+    const g2 = ctx.createRadialGradient(gx,gy,0,gx,gy,R*.18);
+    g2.addColorStop(0,   'rgba(200,180,255,0.20)');
+    g2.addColorStop(0.5, 'rgba(120,90,220,0.08)');
+    g2.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(gx, gy, R*.18, 0, Math.PI*2);
+    ctx.fillStyle = g2; ctx.fill();
+
+    // Spiral arms (3 arms, flattened into ellipse)
+    const ARMS = 3, SPB = 180;
+    const colors = [
+      [160,220,255], // cyan-ish
+      [170,140,255], // purple-ish
+      [200,235,210], // greenish
+    ];
+    ctx.save();
+    ctx.translate(gx, gy); ctx.scale(1, 0.52); ctx.translate(-gx, -gy);
+    for (let a = 0; a < ARMS; a++) {
+      const base = (a / ARMS) * Math.PI * 2;
+      for (let s = 0; s < SPB; s++) {
+        const t = s / SPB;
+        const angle = base + t * Math.PI * 3.5 + (Math.random() - .5) * 0.35;
+        const r = t * R + (Math.random() - .5) * R * 0.18;
+        const x = gx + Math.cos(angle) * r;
+        const y = gy + Math.sin(angle) * r;
+        const size = Math.random() * 1.5 + 0.2;
+        const alpha = (Math.random() * 0.28 + 0.06) * (1 - t * .4);
+        const [cr,cg,cb] = colors[a];
+        ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${cr},${cg},${cb},${alpha})`; ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    // Core bright stars
+    for (let i = 0; i < 45; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const r = Math.random() * R * .12;
+      const x = gx + Math.cos(angle) * r;
+      const y = gy + Math.sin(angle) * r * .52;
+      ctx.beginPath(); ctx.arc(x, y, Math.random() * 1.1 + 0.3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(215,228,255,${Math.random() * .45 + .1})`; ctx.fill();
+    }
+  }
+
+  let galaxyCache = null;
+  function cacheGalaxy() {
+    if (W > 0 && H > 0) galaxyCache = ctx.getImageData(0, 0, W, H);
+  }
+  addEventListener('resize', () => { drawGalaxy(); cacheGalaxy(); });
+  drawGalaxy();
+  cacheGalaxy();
+
+  // Shooting stars
+  const meteors = [];
+  window._shootingStars = true;
+
+  (function fxLoop() {
+    // Restore the static galaxy each frame, then draw meteors on top
+    if (galaxyCache) ctx.putImageData(galaxyCache, 0, 0);
+    else ctx.clearRect(0, 0, W, H);
+
+    if (window._shootingStars && Math.random() < 0.006) {
+      meteors.push({
+        x: Math.random() * W, y: Math.random() * H * .4,
+        vx: Math.random() * 9 + 5, vy: Math.random() * 3.5 + 1.5,
+        life: 70 + Math.random() * 70,
+        max:  70 + Math.random() * 70,
+      });
+    }
+    for (let i = meteors.length - 1; i >= 0; i--) {
+      const m = meteors[i];
+      m.x += m.vx; m.y += m.vy; m.life--;
+      if (m.life <= 0 || m.x > W + 100 || m.y > H + 60) { meteors.splice(i, 1); continue; }
+      const a = (m.life / m.max) * .68;
+      const grd = ctx.createLinearGradient(m.x - m.vx*5, m.y - m.vy*5, m.x, m.y);
+      grd.addColorStop(0, 'rgba(0,212,255,0)');
+      grd.addColorStop(1, `rgba(255,255,255,${a})`);
+      ctx.beginPath(); ctx.moveTo(m.x - m.vx*5, m.y - m.vy*5); ctx.lineTo(m.x, m.y);
+      ctx.strokeStyle = grd; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(m.x, m.y, 1.0, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+    }
+    requestAnimationFrame(fxLoop);
+  })();
+})();
+</script>
+
+<!-- HOME BACKGROUND — 50/50 chance: spiral galaxy OR black hole -->
+<script>
+(function() {
+  const cv = document.getElementById('home-galaxy');
+  const ctx = cv.getContext('2d');
+  let W, H;
+  // Decide once per page load
+  const IS_BLACKHOLE = false;
+
+  function resize() {
+    const slot = document.getElementById('slot-home');
+    W = cv.width  = slot.offsetWidth  || window.innerWidth;
+    H = cv.height = slot.offsetHeight || window.innerHeight;
+    bake();
+  }
+  window.addEventListener('resize', () => resize());
+
+  // ── Shared background stars ──────────────────────────
+  const STARS = Array.from({ length: 60 }, () => ({ // 100→60
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 2.2 + 0.8,
+    a: Math.random() * 0.6 + 0.15,
+    phase: Math.random() * Math.PI * 2,
+    speed: Math.random() * 0.004 + 0.001,
+  }));
+
+  // ── GALAXY state ─────────────────────────────────────
+  let galaxyStars = [], coreDots = [];
+
+  function bakeGalaxy() {
+    const cx = W * 0.5, cy = H * 0.48;
+    const R  = Math.min(W, H) * 0.38;
+    const ARMS = 3, SPB = 140; // 260→140: cached anyway, smaller bake cost
+    const palettes = [[100,190,255],[155,100,255],[160,235,190]];
+    galaxyStars = [];
+    for (let a = 0; a < ARMS; a++) {
+      const base = (a / ARMS) * Math.PI * 2;
+      for (let s = 0; s < SPB; s++) {
+        const tf = s / SPB;
+        const angle = base + tf * Math.PI * 3.8 + (Math.random()-.5)*0.55;
+        const rad   = tf * R + (Math.random()-.5)*R*0.16;
+        galaxyStars.push({
+          x: Math.cos(angle)*rad, y: Math.sin(angle)*rad,
+          r: Math.random()*2.8+0.5,
+          alpha: (Math.random()*0.42+0.1)*(1-tf*0.45),
+          cr: palettes[a][0], cg: palettes[a][1], cb: palettes[a][2],
+        });
+      }
+    }
+    coreDots = Array.from({ length: 70 }, () => {
+      const angle = Math.random()*Math.PI*2, rad = Math.random()*R*0.11;
+      return { x: cx+Math.cos(angle)*rad, y: cy+Math.sin(angle)*rad*0.48,
+               r: Math.random()*2.0+0.4, alpha: Math.random()*0.55+0.1 };
+    });
+  }
+
+  function drawGalaxy(t) {
+    const cx = W*0.5, cy = H*0.48, R = Math.min(W,H)*0.38;
+    const halo = ctx.createRadialGradient(cx,cy,0,cx,cy,R*1.4);
+    halo.addColorStop(0,'rgba(75,45,175,0.16)'); halo.addColorStop(0.35,'rgba(0,170,255,0.07)');
+    halo.addColorStop(0.7,'rgba(55,15,110,0.03)'); halo.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(cx,cy,R*1.4,0,Math.PI*2); ctx.fillStyle=halo; ctx.fill();
+    const core = ctx.createRadialGradient(cx,cy,0,cx,cy,R*0.15);
+    core.addColorStop(0,'rgba(220,200,255,0.28)'); core.addColorStop(0.5,'rgba(130,90,240,0.10)');
+    core.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(cx,cy,R*0.15,0,Math.PI*2); ctx.fillStyle=core; ctx.fill();
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(t*0.00002); ctx.scale(1,0.48);
+    galaxyStars.forEach(s => {
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${s.cr},${s.cg},${s.cb},${s.alpha})`; ctx.fill();
+    });
+    ctx.restore();
+    coreDots.forEach(s => {
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(215,228,255,${s.alpha})`; ctx.fill();
+    });
+  }
+
+  // ── BLACK HOLE state ──────────────────────────────────
+  // Accretion disk particles
+  let diskParticles = [];
+
+  function bakeBH() {
+    const cx = W*0.5, cy = H*0.48;
+    const R = Math.min(W,H)*0.18; // event horizon radius
+    diskParticles = Array.from({ length: 180 }, () => { // 320→180
+      const angle = Math.random()*Math.PI*2;
+      const dist  = R*(1.4 + Math.random()*2.2); // from 1.4R to 3.6R
+      const hot   = Math.random(); // 0=cool blue, 1=hot orange/white
+      return {
+        baseAngle: angle,
+        dist,
+        // inner disk rotates faster
+        speed: 0.000012 / (dist/R) * (Math.random()*0.4+0.8),
+        r: Math.random()*2.2+0.4,
+        hot,
+        alpha: Math.random()*0.55+0.15,
+        // vertical squash (disk is flat)
+        yScale: 0.28 + Math.random()*0.08,
+      };
+    });
+  }
+
+  function drawBH(t) {
+    const cx = W*0.5, cy = H*0.48;
+    const R = Math.min(W,H)*0.18;
+
+    // Outer glow / gravitational lensing effect
+    const lens = ctx.createRadialGradient(cx,cy,R*0.8,cx,cy,R*3.5);
+    lens.addColorStop(0,'rgba(0,0,0,0.98)');
+    lens.addColorStop(0.18,'rgba(255,120,0,0.18)');
+    lens.addColorStop(0.35,'rgba(255,200,80,0.10)');
+    lens.addColorStop(0.6,'rgba(80,60,200,0.06)');
+    lens.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(cx,cy,R*3.5,0,Math.PI*2); ctx.fillStyle=lens; ctx.fill();
+
+    // Accretion disk particles (drawn before the shadow so they go behind)
+    diskParticles.forEach(p => {
+      const angle = p.baseAngle + t * p.speed;
+      const x = cx + Math.cos(angle)*p.dist;
+      const y = cy + Math.sin(angle)*p.dist*p.yScale;
+      // Colour: hot inner = orange/white, outer = blue/purple
+      let r,g,b;
+      if (p.hot > 0.65) { r=255; g=Math.floor(180+p.hot*75); b=Math.floor(p.hot*120); }
+      else if (p.hot > 0.3) { r=255; g=Math.floor(100+p.hot*160); b=50; }
+      else { r=80; g=120; b=255; }
+      ctx.beginPath(); ctx.arc(x,y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${r},${g},${b},${p.alpha})`; ctx.fill();
+    });
+
+    // Photon ring — bright thin ring just outside event horizon
+    const pr = ctx.createRadialGradient(cx,cy,R*1.0,cx,cy,R*1.35);
+    pr.addColorStop(0,'rgba(255,200,80,0)');
+    pr.addColorStop(0.4,'rgba(255,220,120,0.55)');
+    pr.addColorStop(0.7,'rgba(255,180,60,0.25)');
+    pr.addColorStop(1,'rgba(255,120,0,0)');
+    ctx.beginPath(); ctx.arc(cx,cy,R*1.35,0,Math.PI*2); ctx.fillStyle=pr; ctx.fill();
+
+    // Event horizon — pure black circle
+    ctx.beginPath(); ctx.arc(cx,cy,R*1.02,0,Math.PI*2);
+    ctx.fillStyle='#000'; ctx.fill();
+  }
+
+  function bake() { if (IS_BLACKHOLE) bakeBH(); else bakeGalaxy(); }
+
+  function drawFrame(t) {
+    ctx.clearRect(0,0,W,H);
+    // Background stars
+    STARS.forEach(s => {
+      const a = s.a*(0.5+0.5*Math.sin(t*s.speed+s.phase));
+      ctx.beginPath(); ctx.arc(s.x*W, s.y*H, s.r, 0, Math.PI*2);
+      ctx.fillStyle=`rgba(200,218,255,${a})`; ctx.fill();
+    });
+    if (IS_BLACKHOLE) drawBH(t); else drawGalaxy(t);
+  }
+
+  resize();
+  let lastT = 0;
+  function loop(t) {
+    requestAnimationFrame(loop);
+    if (t - lastT < 33) return; // hard 30fps cap
+    lastT = t;
+    // Only draw when home slot is visible
+    const slot = document.getElementById('slot-home');
+    if (slot && !slot.classList.contains('active')) return;
+    drawFrame(t);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+<script>
+/* Small, quiet pointer response for the home field. */
+(function () {
+  let x = 0, y = 0, tx = 0, ty = 0;
+  addEventListener('pointermove', e => {
+    tx = (e.clientX / Math.max(innerWidth, 1) - .5) * 2;
+    ty = (e.clientY / Math.max(innerHeight, 1) - .5) * 2;
+  }, { passive: true });
+  function tick() {
+    x += (tx - x) * .08;
+    y += (ty - y) * .08;
+    const slot = document.getElementById('slot-home');
+    if (slot) {
+      slot.style.setProperty('--pointer-x', `${(x * 18).toFixed(1)}px`);
+      slot.style.setProperty('--pointer-y', `${(y * 12).toFixed(1)}px`);
+    }
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+</script>
+<script>
+/* ── STORAGE — localStorage + cookie fallback ─────────── */
+// Uses localStorage as primary, cookies as fallback.
+// Cookies persist across Cloudflare restarts even if the URL/subdomain changes
+// (as long as the same custom domain is used).
+
+const canLS = (() => { try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return true; } catch(_){return false;} })();
+
+function cookieSet(k, v) {
+  try {
+    const val = encodeURIComponent(JSON.stringify(v));
+    // 1 year expiry, SameSite=Lax
+    document.cookie = `${k}=${val};max-age=31536000;path=/;SameSite=Lax`;
+  } catch(_) {}
+}
+
+function cookieGet(k) {
+  try {
+    const m = document.cookie.match(new RegExp('(?:^|; )' + k + '=([^;]*)'));
+    return m ? JSON.parse(decodeURIComponent(m[1])) : undefined;
+  } catch(_) { return undefined; }
+}
+
+const store = {
+  get(k, d) {
+    // Try localStorage first, then cookie
+    if (canLS) {
+      try { const v = localStorage.getItem(k); if (v !== null) return JSON.parse(v); } catch(_) {}
+    }
+    const c = cookieGet(k);
+    return c !== undefined ? c : d;
+  },
+  set(k, v) {
+    if (canLS) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(_) {} }
+    cookieSet(k, v); // always write cookie too
+  },
+};
+
+/* ── APP STATE ───────────────────────────────────────── */
+const savedCfg = store.get('uos-cfg', { cloak: false, cloakName: 'Google Classroom', stars: true, simpleHome: true, adblock: true }) || {};
+if (typeof savedCfg.simpleHome !== 'boolean') savedCfg.simpleHome = true;
+
+const app = {
+  tabs: [],
+  active: 'home',
+  tc: 0,
+  isFS: false,
+  session: Date.now(),
+  ck: store.get('uos-ck', null),
+  links: store.get('uos-links', []),
+  recent: store.get('uos-recent', []) || [],
+  cfg: savedCfg,
+};
+
+/* ── INIT ────────────────────────────────────────────── */
+window.addEventListener('load', () => {
+  // Cookie banner
+  document.getElementById('cookie').classList.toggle('gone', app.ck !== null);
+
+  // Apply saved settings silently
+  if (app.cfg.simpleHome) applySimpleHomeSetting(true);
+  if (app.cfg.cloak)   applyCloak(true);
+  if (!app.cfg.stars)  window._shootingStars = false;
+  document.getElementById('tog-cloak').classList.toggle('on', app.cfg.cloak);
+  document.getElementById('tog-stars').classList.toggle('on', app.cfg.stars);
+  document.getElementById('tog-simple-home').classList.toggle('on', app.cfg.simpleHome);
+  document.getElementById('tog-adblock').classList.toggle('on', app.cfg.adblock !== false);
+  // Restore saved cloak name in input
+  const cni = document.getElementById('cloak-name-inp');
+  if (cni && app.cfg.cloakName) cni.value = app.cfg.cloakName;
+
+  // Restore saved custom logo
+  if (app.cfg.logoURL) {
+    const inp = document.getElementById('logo-url-inp');
+    if (inp) inp.value = app.cfg.logoURL;
+    const iconSrc = faviconURLFromInput(app.cfg.logoURL);
+    if (iconSrc) applyLogoURL(iconSrc);
+  }
+
+  renderLinkChips(); renderHome(); renderSidebar();
+  setTimeout(() => document.getElementById('boot').classList.add('hide'), 3000);
+});
+
+/* ── COOKIES ─────────────────────────────────────────── */
+function ckOK() { app.ck = true; store.set('uos-ck', true); document.getElementById('cookie').classList.add('gone'); toast('PREFERENCES SAVED'); }
+function ckNo() { app.ck = false; document.getElementById('cookie').classList.add('gone'); }
+
+/* ── CLOCK ───────────────────────────────────────────── */
+const pad = n => String(n).padStart(2,'0');
+const DAYS = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const MONS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+// Detect if user's locale uses 12h or 24h
+const _use12h = new Intl.DateTimeFormat(undefined, { hour: 'numeric' })
+  .format(new Date(2000,0,1,13)).includes('1'); // '1 PM' = 12h, '13' = 24h
+
+function fmtTime(d) {
+  if (_use12h) {
+    let h = d.getHours(), m = d.getMinutes(), ap = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${pad(m)} ${ap}`;
+  }
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function fmtTimeLong(d) {
+  if (_use12h) {
+    let h = d.getHours(), m = d.getMinutes(), s = d.getSeconds(), ap = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${pad(m)}:${pad(s)} ${ap}`;
+  }
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+setInterval(() => {
+  const n = new Date();
+  document.getElementById('clk-t').textContent = fmtTime(n);
+  document.getElementById('clk-d').textContent = `${DAYS[n.getDay()]} ${pad(n.getDate())} ${MONS[n.getMonth()]}`;
+  document.getElementById('bigclock').textContent = fmtTimeLong(n);
+  const e = Math.floor((Date.now() - app.session) / 1000);
+  document.getElementById('sb-session').textContent = `${pad(Math.floor(e/60))}:${pad(e%60)}`;
+}, 1000);
+
+/* ── TOAST ───────────────────────────────────────────── */
+function toast(msg, col = '#00d4ff') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.borderColor = col; el.style.color = col;
+  el.classList.add('show'); clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+/* ── LATENCY ─────────────────────────────────────────── */
+function setLat(ms) {
+  const el = document.getElementById('lat');
+  document.getElementById('lat-val').textContent = ms + 'ms';
+  el.className = '';
+  if (ms < 200) el.classList.add('g');
+  else if (ms < 600) el.classList.add('y');
+  else el.classList.add('r');
+}
+
+/* ── URL RESOLVER ────────────────────────────────────── */
+function resolveURL(raw) {
+  raw = (raw || '').trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (!/\s/.test(raw) && /\.[a-z]{2,}(\/|$|:|\?)/i.test(raw)) return 'https://' + raw;
+  return 'https://duckduckgo.com/?q=' + encodeURIComponent(raw);
+}
+
+/* ── TABS ────────────────────────────────────────────── */
+function stopFrame(frame) {
+  if (!frame) return;
+  frame._loadToken = (frame._loadToken || 0) + 1;
+  frame.onload = null;
+  frame.onerror = null;
+  frame.dataset.suspended = 'true';
+
+  // Give same-origin pages a chance to stop custom players before unloading.
+  try { frame.contentWindow?.postMessage({ type: 'universium-stop' }, '*'); } catch(_) {}
+  try {
+    frame.contentDocument?.querySelectorAll('audio,video').forEach(media => {
+      media.pause();
+      media.currentTime = 0;
+    });
+  } catch(_) {}
+
+  frame.removeAttribute('srcdoc');
+  frame.src = 'about:blank';
+  frame.classList.remove('show');
+}
+
+function stopAllRunningContent(keepFrameId = null) {
+  document.querySelectorAll('#frames iframe').forEach(frame => {
+    if (frame.id !== keepFrameId) stopFrame(frame);
+  });
+
+  const movieFrame = document.getElementById('movies-frame');
+  if (movieFrame && movieFrame.id !== keepFrameId) {
+    stopFrame(movieFrame);
+    _moviesLoaded = false;
+    document.getElementById('loadbar').classList.remove('on');
+  }
+}
+
+function newTab(url) {
+  const id = 't' + (++app.tc);
+  app.tabs.push({ id, title: url ? 'Loading...' : 'New Tab', url: url || '', fav: '' });
+
+  const slot = document.createElement('div');
+  slot.className = 'fslot'; slot.id = 'slot-' + id;
+
+  if (!url) {
+    // Show home grid in empty new tab
+    const gid = 'qg-' + id;
+    slot.innerHTML = `<div class="home">
+      <div class="home-hero" style="animation:none">
+        <svg class="home-star-svg" width="36" height="36" viewBox="0 0 52 52" fill="none">
+          <polygon points="26,3 31,18 48,18 35,29 40,46 26,37 12,46 17,29 4,18 21,18" fill="#00d4ff" opacity=".8"/>
+        </svg>
+        <div class="home-title" style="font-size:1.3rem">NEW TAB</div>
+        <div class="home-sub">ENTER AN ADDRESS OR SEARCH ABOVE</div>
+      </div>
+      <div class="home-search" style="animation:none">
+        <input type="text" placeholder="Search or enter a URL..." autocomplete="off" spellcheck="false"
+          onkeydown="if(event.key==='Enter'){go(this.value);this.value=''}">
+        <button onclick="go(this.previousElementSibling.value)">LAUNCH</button>
+      </div>
+      <div class="qgrid" id="${gid}"></div>
+    </div>`;
+    document.getElementById('frames').appendChild(slot);
+    switchTab(id);
+    renderTabs();
+    buildGrid(gid);
+    return;
+  }
+
+  const iframe = document.createElement('iframe');
+  iframe.className = 'pf'; iframe.id = 'ifr-' + id;
+  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-presentation allow-downloads');
+  iframe.setAttribute('allow', 'accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;fullscreen;xr-spatial-tracking;gamepad');
+  iframe.allowFullscreen = true;
+  slot.appendChild(iframe);
+  document.getElementById('frames').appendChild(slot);
+  switchTab(id);
+  renderTabs();
+  loadURL(id, url);
+}
+
+function switchTab(id) {
+  const keepFrameId = id === 'movies' ? 'movies-frame' : 'ifr-' + id;
+  stopAllRunningContent(keepFrameId);
+  document.querySelectorAll('.fslot').forEach(s => s.classList.remove('active'));
+  app.active = id;
+  const slot = document.getElementById(id === 'home' ? 'slot-home' : 'slot-' + id);
+  if (slot) slot.classList.add('active');
+  const tab = app.tabs.find(t => t.id === id);
+  const addr = document.getElementById('addr-input');
+  if (tab && tab.url) {
+    addr.value = tab.url;
+    document.getElementById('sb-url').textContent = tab.url.slice(0, 60);
+  } else {
+    addr.value = '';
+    document.getElementById('sb-url').textContent = '';
+  }
+  renderTabs();
+
+  // Suspended browser tabs resume only when selected again.
+  const frame = document.getElementById('ifr-' + id);
+  if (frame?.dataset.suspended && tab?.url) {
+    delete frame.dataset.suspended;
+    loadURL(id, tab.url);
+  }
+}
+
+function closeTab(id, e) {
+  if (e) e.stopPropagation();
+  const i = app.tabs.findIndex(t => t.id === id);
+  if (i < 0) return;
+  app.tabs.splice(i, 1);
+  document.getElementById('slot-' + id)?.remove();
+  if (app.active === id) {
+    app.tabs.length ? switchTab(app.tabs[Math.max(0, i-1)].id) : goHome();
+  }
+  renderTabs();
+}
+
+function renderTabs() {
+  const bar = document.getElementById('tabs');
+  bar.innerHTML = '';
+  app.tabs.forEach(tab => {
+    const el = document.createElement('div');
+    el.className = 'tab' + (app.active === tab.id ? ' active' : '');
+    el.onclick = () => switchTab(tab.id);
+    const ico = tab.fav
+      ? `<img class="tab-ico" src="${tab.fav}" alt="" onerror="this.style.display='none'">`
+      : `<svg class="tab-ico-ph" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="7" cy="7" r="5"/><path d="M7 2v10M2 7h10"/></svg>`;
+    el.innerHTML = `${ico}<span class="tab-label">${tab.title}</span><button class="tab-close" onclick="closeTab('${tab.id}',event)">✕</button>`;
+    bar.appendChild(el);
+  });
+}
+
+/* ── LOAD URL IN TAB ─────────────────────────────────── */
+async function loadURL(tabId, url) {
+  const iframe = document.getElementById('ifr-' + tabId);
+  if (!iframe) return;
+  const loadToken = (iframe._loadToken || 0) + 1;
+  iframe._loadToken = loadToken;
+  delete iframe.dataset.suspended;
+
+  const lb = document.getElementById('loadbar');
+  lb.classList.add('on');
+  iframe.classList.remove('show');
+  document.getElementById('sb-status').textContent = 'LOADING...';
+
+  const host = (() => { try { return new URL(url).hostname; } catch(_) { return url; } })();
+
+  // Show a loading page in the iframe immediately
+  iframe.srcdoc = `<!DOCTYPE html><html><head><style>
+    *{margin:0;padding:0} body{background:#020408;display:flex;align-items:center;
+    justify-content:center;height:100vh;flex-direction:column;gap:12px;font-family:monospace}
+    .r{width:34px;height:34px;border-radius:50%;border:2px solid #0f1e35;
+      border-top-color:#00d4ff;animation:s .8s linear infinite}
+    @keyframes s{to{transform:rotate(360deg)}}
+    p{color:#344f6a;font-size:.5rem;letter-spacing:3px} b{color:#00d4ff}
+  </style></head><body><div class="r"></div>
+    <p>ROUTING TO <b>${host.toUpperCase()}</b></p></body></html>`;
+
+  const t0 = Date.now();
+
+  // Wait for UV (max 6 seconds)
+  if (!window._uvReady) {
+    await new Promise(resolve => {
+      let n = 0;
+      const check = setInterval(() => {
+        if (window._uvReady || ++n > 60) { clearInterval(check); resolve(); }
+      }, 100);
+    });
+  }
+
+  if (iframe._loadToken !== loadToken) return;
+
+  if (window._uvReady && typeof __uv$config !== 'undefined') {
+    const encoded = __uv$config.prefix + __uv$config.encodeUrl(url);
+
+    // Must clear srcdoc before setting src — otherwise the browser ignores src
+    iframe.removeAttribute('srcdoc');
+    // One rAF to let the browser process the attribute removal
+    await new Promise(r => requestAnimationFrame(r));
+    if (iframe._loadToken !== loadToken) return;
+
+    iframe.onload = () => {
+      if (!iframe.src || iframe.src.endsWith('about:blank')) return;
+      const lat = Date.now() - t0;
+      lb.classList.remove('on');
+      iframe.classList.add('show');
+      setLat(lat);
+      document.getElementById('sb-status').textContent = 'OK  ' + lat + 'ms';
+      const tab = app.tabs.find(t => t.id === tabId);
+      if (tab) {
+        try { tab.title = iframe.contentDocument?.title || host; } catch(_) { tab.title = host; }
+        renderTabs();
+      }
+      toast('CONNECTED  ' + lat + 'ms');
+    };
+
+    iframe.src = encoded;
+
+  } else {
+    // UV not ready — show error
+    iframe.srcdoc = `<!DOCTYPE html><html><head><style>
+      *{margin:0;padding:0} body{background:#020408;display:flex;align-items:center;
+      justify-content:center;height:100vh;flex-direction:column;gap:12px;
+      font-family:monospace;text-align:center;padding:28px}
+      h2{color:#ff3d6e;font-size:.65rem;letter-spacing:3px;margin-bottom:6px}
+      p{color:#344f6a;font-size:.54rem;line-height:2.2}
+      code{color:#00d4ff;background:#060b12;padding:2px 8px;border-radius:3px}
+      a{color:#6c4dff}
+    </style></head><body>
+      <h2>PROXY NOT READY</h2>
+      <p>Make sure you ran <code>npm install</code> then <code>npm start</code><br>
+      and opened <code>http://localhost:3000</code> in your browser.<br><br>
+      <a href="${url}" target="_blank">Try opening ${host} directly ↗</a></p>
+    </body></html>`;
+    lb.classList.remove('on');
+  }
+
+  // Update tab metadata
+  const tab = app.tabs.find(t => t.id === tabId);
+  if (tab) {
+    tab.url = url;
+    try { tab.fav = `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=32`; } catch(_) {}
+    renderTabs();
+  }
+  document.getElementById('addr-input').value = url;
+  document.getElementById('sb-url').textContent = url.slice(0, 60);
+}
+
+/* ── NAVIGATE ────────────────────────────────────────── */
+function rememberRecent(label, url) {
+  if (!url || url === '_GAMES' || url === '_MOVIES') return;
+  app.recent = [{ label, url }, ...app.recent.filter(item => item.url !== url)].slice(0, 4);
+  store.set('uos-recent', app.recent);
+  renderHomePanels();
+}
+
+function go(raw) {
+  const url = resolveURL(raw);
+  if (!url) return;
+  closeSidebar();
+  try { rememberRecent(new URL(url).hostname.replace(/^www\./, ''), url); } catch(_) {}
+  // If active tab has an iframe, reuse it; otherwise open new tab
+  if (app.active !== 'home' && document.getElementById('ifr-' + app.active)) {
+    stopAllRunningContent('ifr-' + app.active);
+    loadURL(app.active, url);
+  } else {
+    newTab(url);
+  }
+}
+
+function navFromBar() { go(document.getElementById('addr-input').value); }
+function homeGo() {
+  const input = document.getElementById('home-inp');
+  const v = input?.value.trim();
+  if (v) { go(v); input.value = ''; }
+}
+function goHome() {
+  closeSidebar();
+  stopAllRunningContent();
+  app.active = 'home';
+  document.querySelectorAll('.fslot').forEach(s => s.classList.remove('active'));
+  document.getElementById('slot-home').classList.add('active');
+  document.getElementById('addr-input').value = '';
+  document.getElementById('sb-url').textContent = '';
+  document.getElementById('sb-status').textContent = 'HOME';
+  setSidebarActive('sb-home');
+  renderTabs();
+}
+function openInNewTab() {
+  const tab = app.tabs.find(t => t.id === app.active);
+  if (tab?.url) window.open(tab.url, '_blank');
+}
+
+function histBack() { try { document.getElementById('ifr-' + app.active)?.contentWindow?.history.back(); } catch(_) {} }
+function histFwd()  { try { document.getElementById('ifr-' + app.active)?.contentWindow?.history.forward(); } catch(_) {} }
+function reloadTab() {
+  if (app.active === 'movies') {
+    unloadMovies();
+    openMovies();
+    return;
+  }
+  const f = document.getElementById('ifr-' + app.active);
+  if (f && f.src) { const s = f.src; f.src = 'about:blank'; setTimeout(() => { f.src = s; }, 30); }
+}
+
+/* ── BLANKER ─────────────────────────────────────────── */
+// Opens a new window at about:blank and writes the full Universium HTML into it
+// so the URL bar shows about:blank but the site is fully usable inside
+function openBlanker() {
+  const w = window.open('', '_blank');
+  if (!w) { toast('ALLOW POP-UPS TO USE BLANKER', '#ffb800'); return; }
+
+  // Clone the entire current page HTML into the new window
+  // The new window URL stays as about:blank
+  const html = document.documentElement.outerHTML;
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+
+  // Patch the cloned window so its blanker button doesn't recurse
+  try {
+    w.openBlanker = () => {};
+  } catch(_) {}
+}
+
+/* ── FULLSCREEN ──────────────────────────────────────── */
+function toggleFS() {
+  // Fullscreen the active iframe if one is loaded, otherwise fullscreen the page
+  const activeFrame = app.active !== 'home' ? document.getElementById('ifr-' + app.active) : null;
+  const target = (activeFrame && activeFrame.src && activeFrame.src !== 'about:blank') ? activeFrame : document.documentElement;
+  const already = document.fullscreenElement || document.webkitFullscreenElement;
+  if (!already) {
+    (target.requestFullscreen || target.webkitRequestFullscreen || target.mozRequestFullScreen).call(target);
+  } else {
+    (document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen).call(document);
+  }
+}
+['fullscreenchange', 'webkitfullscreenchange'].forEach(ev =>
+  document.addEventListener(ev, () => {
+    app.isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    document.getElementById('fs-btn').classList.toggle('active', app.isFS);
+  })
+);
+
+// Ctrl+F → fullscreen active iframe
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'f') { e.preventDefault(); toggleFS(); }
+  if (e.key === 'Escape') { closeSettings(); closeConsole(); }
+});
+
+/* ── SETTINGS ────────────────────────────────────────── */
+function openSettings()  { document.getElementById('settings').classList.add('open'); }
+function closeSettings() { document.getElementById('settings').classList.remove('open'); }
+
+function toggleSidebar() {
+  const os = document.getElementById('os');
+  if (!os.classList.contains('simple-home-shell')) return;
+  os.classList.toggle('drawer-open');
+}
+function closeSidebar() {
+  document.getElementById('os')?.classList.remove('drawer-open');
+}
+
+function applySimpleHomeSetting(on) {
+  const os = document.getElementById('os');
+  os.classList.toggle('simple-home-shell', on);
+  os.style.gridTemplateColumns = on ? '0 1fr' : 'var(--sidebar-w) 1fr';
+  document.getElementById('slot-home')?.classList.toggle('simple-home-mode', on);
+  if (!on) closeSidebar();
+}
+
+function applyCloak(on) {
+  const name = app.cfg.cloakName || 'Google Classroom';
+  document.title = on ? name : 'Universium';
+  document.getElementById('cloak-name-row').style.display = on ? '' : 'none';
+  const inp = document.getElementById('cloak-name-inp');
+  if (inp && !inp.value) inp.value = name;
+}
+
+function saveCloakName() {
+  const v = document.getElementById('cloak-name-inp').value.trim();
+  if (!v) return;
+  app.cfg.cloakName = v;
+  store.set('uos-cfg', app.cfg);
+  if (app.cfg.cloak) document.title = v;
+  toast('CLOAK NAME SAVED');
+}
+
+function faviconURLFromInput(raw) {
+  raw = (raw || '').trim();
+  if (!raw) return null;
+  // If it looks like a direct image URL, use as-is
+  if (/\.(png|jpg|jpeg|ico|svg|gif|webp)(\?|$)/i.test(raw)) {
+    return /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+  }
+  // Otherwise extract hostname and fetch favicon via Google's service
+  try {
+    const url = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+    const host = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+  } catch(_) { return null; }
+}
+
+function applyLogoURL(iconSrc) {
+  if (!iconSrc) return;
+  const favEl = document.getElementById('fav-icon');
+  if (favEl) favEl.href = iconSrc;
+}
+
+function saveLogoURL() {
+  const raw = document.getElementById('logo-url-inp').value.trim();
+  if (!raw) {
+    // Reset to default
+    app.cfg.logoURL = '';
+    store.set('uos-cfg', app.cfg);
+    document.getElementById('fav-icon').href = 'data:,';
+    document.getElementById('t-logo-img').style.display = 'none';
+    document.getElementById('t-logo-svg').style.display = '';
+    toast('LOGO RESET');
+    return;
+  }
+  const iconSrc = faviconURLFromInput(raw);
+  if (!iconSrc) { toast('INVALID URL'); return; }
+  app.cfg.logoURL = raw;
+  store.set('uos-cfg', app.cfg);
+  applyLogoURL(iconSrc);
+  toast('LOGO UPDATED');
+}
+
+function togSetting(key) {
+  app.cfg[key] = !app.cfg[key];
+  document.getElementById('tog-' + key)?.classList.toggle('on', app.cfg[key]);
+  if (key === 'cloak')   applyCloak(app.cfg.cloak);
+  if (key === 'stars')   window._shootingStars = app.cfg.stars;
+  if (key === 'simpleHome') applySimpleHomeSetting(app.cfg.simpleHome);
+  if (key === 'adblock') { toast(app.cfg.adblock ? 'AD BLOCKING ON' : 'AD BLOCKING OFF'); }
+  store.set('uos-cfg', app.cfg);
+}
+
+/* ── CUSTOM LINKS ────────────────────────────────────── */
+function addLink() {
+  const n = document.getElementById('ln').value.trim();
+  const u = document.getElementById('lu').value.trim();
+  if (!n || !u) return;
+  app.links.push({ label: n, url: u });
+  store.set('uos-links', app.links);
+  document.getElementById('ln').value = ''; document.getElementById('lu').value = '';
+  renderLinkChips(); renderHome(); renderSidebar();
+  toast('LINK ADDED');
+}
+function removeLink(i) {
+  app.links.splice(i, 1); store.set('uos-links', app.links);
+  renderLinkChips(); renderHome(); renderSidebar();
+}
+function renderLinkChips() {
+  const el = document.getElementById('link-chips'); el.innerHTML = '';
+  app.links.forEach((l, i) => {
+    const c = document.createElement('div'); c.className = 'lchip';
+    c.innerHTML = `<span>${l.label}</span><button onclick="removeLink(${i})">✕</button>`;
+    el.appendChild(c);
+  });
+}
+
+/* ── QUICK GRID ──────────────────────────────────────── */
+const DEFAULTS = [
+  { label: 'TikTok',      url: 'tiktok.com' },
+  { label: 'YouTube',     url: 'youtube.com' },
+  { label: 'ChatGPT',     url: 'chatgpt.com' },
+  { label: 'CrazyGames',  url: 'crazygames.com' },
+  { label: 'GitHub',      url: 'github.com' },
+  { label: 'now.gg',      url: 'now.gg' },
+  { label: 'GeForce Now', url: 'play.geforcenow.com' },
+  { label: 'Twitch',      url: 'twitch.tv' },
+  { label: 'Spotify',     url: 'open.spotify.com' },
+  { label: 'Games',       url: '_GAMES' },
+  { label: 'Movies',      url: '_MOVIES' },
+];
+
+function buildGrid(gid) {
+  const g = document.getElementById(gid); if (!g) return;
+  g.innerHTML = '';
+  [...DEFAULTS, ...app.links].forEach((lnk, i) => {
+    const d = document.createElement('div'); d.className = 'qcard';
+    d.style.animation = `rise .5s ${.15 + i * .04}s cubic-bezier(.16,1,.3,1) both`;
+    const isSpecial = lnk.url === '_GAMES' || lnk.url === '_MOVIES';
+    const domain = !isSpecial && lnk.url ? lnk.url.replace(/^https?:\/\//, '').split('/')[0] : null;
+    const specialIcon = lnk.url === '_GAMES'
+      ? `<svg viewBox="0 0 20 20" fill="none" stroke="#7b61ff" stroke-width="1.5"><rect x="2" y="5" width="16" height="12" rx="2"/><path d="M8 11h2m1-1v2M14 11h.01M16 11h.01"/><path d="M8 5V3h4v2"/></svg>`
+      : lnk.url === '_MOVIES'
+      ? `<svg viewBox="0 0 20 20" fill="none" stroke="#ff3d6e" stroke-width="1.5"><rect x="2" y="3" width="16" height="14" rx="2"/><path d="M2 7h16M6 3v4M10 3v4M14 3v4"/></svg>`
+      : null;
+    d.innerHTML = `
+      <div class="qcard-ico">
+        ${specialIcon ? specialIcon : domain ? `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="" onerror="this.style.display='none'">` : `<svg viewBox="0 0 20 20" fill="none" stroke="#344f6a" stroke-width="1.4"><path d="M3 3l5.5 5.5M17 3l-5.5 5.5M10 8.5v8"/></svg>`}
+      </div>
+      <div class="qcard-label">${lnk.label}</div>`;
+    d.onclick = () => {
+      if (lnk.url === '_GAMES') openGames();
+      else if (lnk.url === '_MOVIES') openMovies();
+      else go(lnk.url);
+    };
+    g.appendChild(d);
+  });
+}
+
+function renderHomePanels() {
+  const list = document.getElementById('home-recent');
+  const count = document.getElementById('recent-count');
+  if (!list || !count) return;
+  count.textContent = String(app.recent.length);
+  list.innerHTML = '';
+  if (!app.recent.length) {
+    list.innerHTML = '<div class="recent-empty">Sites you open will show up here.</div>';
+    return;
+  }
+  app.recent.forEach(item => {
+    const row = document.createElement('button');
+    row.className = 'recent-item';
+    row.type = 'button';
+    const label = document.createElement('span');
+    const domain = document.createElement('small');
+    label.textContent = item.label;
+    domain.textContent = item.url.replace(/^https?:\/\//, '').split('/')[0];
+    row.append(label, domain);
+    row.onclick = () => go(item.url);
+    list.appendChild(row);
+  });
+}
+function renderHome() { buildGrid('qgrid-home'); renderHomePanels(); }
+function renderSidebar() {
+  const el = document.getElementById('sb-custom'); el.innerHTML = '';
+  if (!app.links.length) return;
+  el.innerHTML = '<div class="sb-div"></div><div class="sb-sec">Custom</div>';
+  app.links.forEach(lnk => {
+    const domain = lnk.url.replace(/^https?:\/\//, '').split('/')[0];
+    const item = document.createElement('div'); item.className = 'sb-item';
+    item.innerHTML = `<div class="sb-icon"><img src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" alt="" onerror="this.style.display='none'"></div><div class="sb-label">${lnk.label}</div>`;
+    item.onclick = () => go(lnk.url);
+    el.appendChild(item);
+  });
+}
+
+function setSidebarActive(id) {
+  document.querySelectorAll('.sb-item').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+/* ── DEV CONSOLE ─────────────────────────────────────── */
+let _consoleOpen = false;
+
+function toggleConsole() {
+  _consoleOpen = !_consoleOpen;
+  document.getElementById('console-panel').classList.toggle('open', _consoleOpen);
+  if (_consoleOpen) document.getElementById('csl-input').focus();
+}
+function closeConsole() {
+  _consoleOpen = false;
+  document.getElementById('console-panel').classList.remove('open');
+}
+
+function cslLog(text, type = 'res') {
+  const out = document.getElementById('csl-out');
+  const line = document.createElement('div');
+  line.className = 'csl-line ' + type;
+  line.textContent = text;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+}
+
+function runConsole() {
+  const input = document.getElementById('csl-input');
+  const code = input.value.trim();
+  if (!code) return;
+  cslLog(code, 'cmd');
+  input.value = '';
+  input.style.height = '';
+  // Run in active site's iframe context if one is loaded, else fall back to main window
+  const activeIframe = document.getElementById('ifr-' + app.active);
+  let target = window;
+  if (activeIframe) {
+    try {
+      void activeIframe.contentWindow.document; // throws if cross-origin
+      target = activeIframe.contentWindow;
+    } catch(_) { /* cross-origin, stay on main window */ }
+  }
+  try {
+    const origLog = target.console.log, origWarn = target.console.warn, origErr = target.console.error;
+    const logs = [];
+    target.console.log   = (...a) => { logs.push(['res',  a.map(String).join(' ')]); origLog(...a); };
+    target.console.warn  = (...a) => { logs.push(['info', '⚠ ' + a.map(String).join(' ')]); origWarn(...a); };
+    target.console.error = (...a) => { logs.push(['err',  a.map(String).join(' ')]); origErr(...a); };
+    const result = target.eval(code);
+    target.console.log = origLog; target.console.warn = origWarn; target.console.error = origErr;
+    logs.forEach(([t, m]) => cslLog(m, t));
+    if (result !== undefined) cslLog(String(result), 'res');
+  } catch(e) {
+    cslLog(e.message, 'err');
+  }
+}
+
+// Auto-resize textarea and Ctrl+Enter to run
+document.getElementById('csl-input').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+});
+document.getElementById('csl-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); runConsole(); }
+  if (e.key === 'Escape') closeConsole();
+});
+
+/* ── GAMES ───────────────────────────────────────────── */
+// Steam CDN: https://cdn.cloudflare.steamstatic.com/steam/apps/{ID}/header.jpg
+const GAMES_LIBRARY = [
+  { id:'brotato',    name:'Brotato',               desc:'Roguelite wave shooter. Survive as a potato.',          tag:'ROGUELITE',  color:'#8B1A1A', src:'/games/brotato.html',             thumb:'https://cdn.cloudflare.steamstatic.com/steam/apps/1942280/header.jpg' },
+  { id:'minecraft',  name:'Minecraft 1.12.2',       desc:'The iconic sandbox survival game.',                     tag:'SANDBOX',    color:'#5B7A3A', src:'/games/minecraft.html',            thumb:'/img/minecraft.png' },
+  { id:'terraria',   name:'Terraria',               desc:'2D adventure, building and survival.',                  tag:'ADVENTURE',  color:'#3A7A5B', src:'/games/terraria.html',             thumb:'https://cdn.cloudflare.steamstatic.com/steam/apps/105600/header.jpg' },
+  { id:'buckshot',   name:'Buckshot Roulette',       desc:'Underground horror gambling with a shotgun.',           tag:'HORROR',     color:'#6B1A1A', src:'/games/buckshot_roulette.html',   thumb:'https://cdn.cloudflare.steamstatic.com/steam/apps/2835570/header.jpg' },
+  { id:'repo',       name:'R.E.P.O.',                desc:'Co-op horror scavenging with physics mayhem.',          tag:'CO-OP',      color:'#3A3A7A', src:'/games/repo.html',                thumb:'https://cdn.cloudflare.steamstatic.com/steam/apps/3241660/header.jpg' },
+  { id:'neighbor',   name:"That's Not My Neighbor", desc:'Spot the doppelgangers at the door.',                   tag:'HORROR',     color:'#7A5B1A', src:'/games/thats_not_my_neighbor.html',thumb:'https://cdn.cloudflare.steamstatic.com/steam/apps/3431040/header.jpg' },
+  { id:'geodash',    name:'Geometry Dash',           desc:'Rhythm-based platformer. Don\'t crash.',               tag:'RHYTHM',     color:'#5B1A7A', src:'/games/geometry_dash.html',        thumb:'https://cdn.cloudflare.steamstatic.com/steam/apps/322170/header.jpg' },
+  { id:'adofai',     name:'A Dance of Fire & Ice',  desc:'Two orbiting planets. Keep the beat.',                  tag:'RHYTHM',     color:'#7A1A5B', src:'/games/adofai.html',               thumb:'https://cdn.cloudflare.steamstatic.com/steam/apps/977950/header.jpg' },
+  { id:'cookie',     name:'Cookie Clicker',          desc:'Click cookies. Build an empire.',                       tag:'IDLE',       color:'#7A5B1A', src:'/games/cookie_clicker.html',       thumb:'https://cdn.cloudflare.steamstatic.com/steam/apps/1454400/header.jpg' },
+  { id:'bloons',     name:'Bloons TD 5',             desc:'Tower defense — pop all the bloons.',                   tag:'STRATEGY',   color:'#1A7A3A', src:'/games/bloons_td5.html',           thumb:'https://cdn.cloudflare.steamstatic.com/steam/apps/306020/header.jpg' },
+  { id:'retrobowl',  name:'Retro Bowl',              desc:'Old-school American football management.',              tag:'SPORTS',     color:'#1A3A7A', src:'/games/retro_bowl.html',           thumb:'/img/retro_bowl.png' },
+  { id:'basket',     name:'Basket Bros',             desc:'Fast-paced 2-player basketball brawler.',               tag:'SPORTS',     color:'#7A3A1A', src:'/games/basket_bros.html',          thumb:'/img/basket_bros.png' },
+  { id:'bitlife',    name:'BitLife',                 desc:'Life simulation — make every choice count.',            tag:'SIMULATION', color:'#1A5B7A', src:'/games/bitlife.html',              thumb:'/img/bitlife.png' },
+  { id:'cloverpit',  name:'Clover Pit',              desc:'Action roguelite dungeon crawler.',                     tag:'ROGUELITE',  color:'#1A7A5B', src:'/games/clover_pit.html',           thumb:'/img/clover_pit.png' },
+  { id:'tinyfishing',name:'Tiny Fishing',            desc:'Cast your line, catch fish, and upgrade your gear.',    tag:'CASUAL',     color:'#1A6B7A', src:'/games/tiny_fishing.html', thumb:'https://tinyfishingame.com/tiny-fishing.webp' },
+];
+
+function openGames() {
+  closeSidebar();
+  stopAllRunningContent();
+  setSidebarActive('sb-games');
+  app.active = 'games';
+  document.querySelectorAll('.fslot').forEach(s => s.classList.remove('active'));
+  document.getElementById('slot-games').classList.add('active');
+  document.getElementById('addr-input').value = '';
+  document.getElementById('sb-status').textContent = 'GAMES';
+  document.getElementById('sb-url').textContent = '';
+  renderGameGrid();
+  renderTabs();
+}
+
+function renderGameGrid() {
+  const grid = document.getElementById('game-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  GAMES_LIBRARY.forEach(g => {
+    const card = document.createElement('div');
+    card.className = 'game-card';
+
+    const thumb = document.createElement('div');
+    thumb.className = 'game-thumb';
+    thumb.style.background = `linear-gradient(135deg,${g.color}33,${g.color}66)`;
+
+    if (g.thumb) {
+      const img = document.createElement('img');
+      img.src = g.thumb;
+      img.alt = g.name;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+      img.onerror = function() {
+        this.replaceWith(...(function() {
+          const d = document.createElement('div');
+          d.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center';
+          d.innerHTML = defaultGameThumb(g);
+          return [d];
+        })());
+      };
+      thumb.appendChild(img);
+    } else {
+      thumb.innerHTML = defaultGameThumb(g);
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'game-play-overlay';
+    overlay.innerHTML = '<div class="game-play-btn"><svg viewBox="0 0 20 20" fill="white"><polygon points="6,3 17,10 6,17"/></svg></div>';
+    thumb.appendChild(overlay);
+
+    const info = document.createElement('div');
+    info.className = 'game-info';
+    info.innerHTML = `<div class="game-name">${g.name}</div><div class="game-desc">${g.desc}</div><span class="game-tag">${g.tag}</span>`;
+
+    card.appendChild(thumb);
+    card.appendChild(info);
+    card.onclick = () => launchGame(g);
+    grid.appendChild(card);
+  });
+}
+
+function defaultGameThumb(g) {
+  return `<svg width="52" height="52" viewBox="0 0 40 40" fill="none">
+    <rect x="2" y="8" width="36" height="24" rx="6" fill="${g.color}" opacity=".25"/>
+    <rect x="2" y="8" width="36" height="24" rx="6" stroke="${g.color}" stroke-width="1.5" opacity=".7"/>
+    <path d="M12 20h4m-2-2v4M26 20h.01M30 20h.01" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function launchGame(g) {
+  const slotId = 'slot-game-' + g.id;
+  let slot = document.getElementById(slotId);
+  if (!slot) {
+    slot = document.createElement('div');
+    slot.className = 'fslot';
+    slot.id = slotId;
+    slot.innerHTML = `
+      <div class="game-iframe-bar">
+        <span class="gib-title">${g.name}</span>
+        <div style="display:flex;gap:6px">
+          <button class="gib-btn danger" onclick="closeGame('${g.id}')">
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="8,2 4,6 8,10"/></svg>
+            BACK
+          </button>
+          <button class="gib-btn" onclick="gameFullscreen('${g.id}')">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><polyline points="8.5,1 13,1 13,5.5"/><polyline points="5.5,13 1,13 1,8.5"/><line x1="13" y1="1" x2="8" y2="6"/><line x1="1" y1="13" x2="6" y2="8"/></svg>
+            FULLSCREEN
+          </button>
+          <button class="gib-btn" onclick="gameBlanker()">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1" y="1" width="12" height="12" rx="2"/><line x1="1" y1="4.5" x2="13" y2="4.5"/></svg>
+            BLANKER
+          </button>
+        </div>
+      </div>
+      <div class="game-loader" id="game-loader-${g.id}">
+        <div class="game-loader-ring"></div>
+        <div class="game-loader-name">${g.name}</div>
+        <div class="game-loader-sub">LOADING...</div>
+      </div>
+      <iframe id="game-frame-${g.id}" class="pf" style="flex:1"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-presentation allow-downloads allow-modals"
+        allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;fullscreen;xr-spatial-tracking;gamepad"
+        allowfullscreen></iframe>`;
+    document.getElementById('frames').appendChild(slot);
+  }
+
+  // Show loader, hide iframe until page is ready
+  const loader = document.getElementById('game-loader-' + g.id);
+  const frame  = document.getElementById('game-frame-' + g.id);
+  if (loader) { loader.classList.remove('hidden'); }
+  frame.classList.remove('show');
+
+  frame.onload = () => {
+    // Fade in the iframe and fade out the loader
+    frame.classList.add('show');
+    if (loader) {
+      loader.classList.add('hidden');
+      setTimeout(() => { if (loader.parentNode) loader.remove(); }, 450);
+    }
+  };
+
+  // Load directly — server injects the SW suppressor so games with
+  // <base href> pointing to external CDNs don't throw origin-mismatch errors,
+  // and the real document.URL is preserved so WASM engines find their assets.
+  frame.src = g.src;
+  delete frame.dataset.suspended;
+  slot.dataset.gameSrc = g.src;
+  document.querySelectorAll('.fslot').forEach(s => s.classList.remove('active'));
+  slot.classList.add('active');
+  app.active = 'game-' + g.id;
+  document.getElementById('sb-status').textContent = g.name + ' // RUNNING';
+  document.getElementById('addr-input').value = '';
+  setSidebarActive('sb-games');
+  renderTabs();
+}
+
+function closeGame(id) {
+  const frame = document.getElementById('game-frame-' + id);
+  if (frame) frame.src = 'about:blank';
+  const slot = document.getElementById('slot-game-' + id);
+  if (slot) slot.remove();
+  openGames();
+}
+
+function gameFullscreen(id) {
+  const frame = document.getElementById('game-frame-' + id);
+  if (!frame) return;
+  const already = document.fullscreenElement || document.webkitFullscreenElement;
+  if (!already) {
+    (frame.requestFullscreen || frame.webkitRequestFullscreen).call(frame);
+  } else {
+    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  }
+}
+
+function gameBlanker() {
+  const w = window.open('', '_blank');
+  if (!w) { toast('ALLOW POP-UPS FOR BLANKER', '#ffb800'); return; }
+  w.document.open();
+  w.document.write(document.documentElement.outerHTML);
+  w.document.close();
+}
+
+/* ── MOVIES ──────────────────────────────────────────── */
+let _moviesLoaded = false;
+
+function unloadMovies() {
+  const frame = document.getElementById('movies-frame');
+  if (!frame) return;
+  stopFrame(frame);
+  _moviesLoaded = false;
+  document.getElementById('loadbar').classList.remove('on');
+}
+
+function openMovies() {
+  closeSidebar();
+  stopAllRunningContent('movies-frame');
+  setSidebarActive('sb-movies');
+  app.active = 'movies';
+  document.querySelectorAll('.fslot').forEach(s => s.classList.remove('active'));
+  document.getElementById('slot-movies').classList.add('active');
+  document.getElementById('addr-input').value = '';
+  document.getElementById('sb-status').textContent = 'MOVIES // ICY STREAMING';
+  document.getElementById('sb-url').textContent = 'icy-streaming';
+  renderTabs();
+
+  if (!_moviesLoaded) {
+    _moviesLoaded = true;
+    const frame = document.getElementById('movies-frame');
+    const lb = document.getElementById('loadbar');
+    lb.classList.add('on');
+    const t0 = Date.now();
+
+    const loadMovieSite = () => {
+      frame.src = '/movies.html';
+      frame.onload = () => {
+        lb.classList.remove('on');
+        const lat = Date.now() - t0;
+        setLat(lat);
+        toast('ICY STREAMING LOADED // ' + lat + 'ms', '#4fc3f7');
+      };
+    };
+    loadMovieSite();
+  }
+}
+
+function moviesFS() {
+  const frame = document.getElementById('movies-frame');
+  const already = document.fullscreenElement || document.webkitFullscreenElement;
+  if (!already) {
+    (frame.requestFullscreen || frame.webkitRequestFullscreen).call(frame);
+  } else {
+    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  }
+}
+
+function moviesBlanker() {
+  const w = window.open('', '_blank');
+  if (!w) { toast('ALLOW POP-UPS FOR BLANKER', '#ffb800'); return; }
+  w.document.open();
+  w.document.write(document.documentElement.outerHTML);
+  w.document.close();
+}
+
+/* ── KEYBOARD SHORTCUTS ──────────────────────────────── */
+// Only input-level shortcuts remain (no global hotkeys)
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeSettings(); closeConsole(); }
+});
+
+document.getElementById('addr-input').addEventListener('keydown', e => { if (e.key === 'Enter') navFromBar(); });
+document.getElementById('home-inp').addEventListener('keydown',   e => { if (e.key === 'Enter') homeGo(); });
+</script>
+
+<!-- MOUSE-REACTIVE AURORA — optimised: throttled rAF, no per-frame gradient on static orbs -->
+<script>
+(function() {
+  const cv  = document.getElementById('cv-aurora');
+  const ctx = cv.getContext('2d');
+  let W = 0, H = 0;
+
+  // Smooth mouse tracking
+  let mx = -9999, my = -9999, tx = -9999, ty = -9999, px = -9999, py = -9999;
+
+  // 4 slow-drift ambient orbs baked into an offscreen canvas so we're not
+  // recreating radial gradients every frame — only redraw when they visibly move
+  const OFF = document.createElement('canvas');
+  const octx = OFF.getContext('2d');
+  let orbT = 0;
+  const ORBS = [
+    { x:.22, y:.28, vx: 5e-5, vy: 4e-5, r:.32, cr:142,cg:109,cb:232, a:.07 },
+    { x:.76, y:.68, vx:-4e-5, vy:-7e-5, r:.26, cr:182,cg:156,cb:255, a:.055 },
+    { x:.5,  y:.5,  vx: 8e-5, vy:-5e-5, r:.20, cr:232,cg:121,cb:167, a:.04 },
+    { x:.14, y:.82, vx: 5e-5, vy: 9e-5, r:.18, cr:0,  cg:232,cb:122, a:.038 },
+  ];
+
+  function resize() {
+    W = cv.width = OFF.width  = innerWidth;
+    H = cv.height = OFF.height = innerHeight;
+    bakeOrbs();
+  }
+  addEventListener('resize', resize); resize();
+
+  function bakeOrbs() {
+    octx.clearRect(0,0,W,H);
+    ORBS.forEach(o => {
+      const gx = o.x*W, gy = o.y*H, gr = o.r*Math.min(W,H);
+      const g = octx.createRadialGradient(gx,gy,0,gx,gy,gr);
+      g.addColorStop(0,   `rgba(${o.cr},${o.cg},${o.cb},${o.a})`);
+      g.addColorStop(.55, `rgba(${o.cr},${o.cg},${o.cb},${(o.a*.35).toFixed(3)})`);
+      g.addColorStop(1,   `rgba(${o.cr},${o.cg},${o.cb},0)`);
+      octx.beginPath(); octx.arc(gx,gy,gr,0,Math.PI*2);
+      octx.fillStyle=g; octx.fill();
+    });
+  }
+
+  addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; }, { passive:true });
+
+  let raf = 0;
+  function loop() {
+    raf = requestAnimationFrame(loop);
+    orbT++;
+
+    // Drift orbs — rebake every 4 frames (cheap enough, imperceptible)
+    if (orbT % 4 === 0) {
+      ORBS.forEach(o => {
+        o.x += o.vx; o.y += o.vy;
+        if (o.x < -.1) o.x = 1.1; if (o.x > 1.1) o.x = -.1;
+        if (o.y < -.1) o.y = 1.1; if (o.y > 1.1) o.y = -.1;
+      });
+      bakeOrbs();
+    }
+
+    ctx.clearRect(0,0,W,H);
+    ctx.drawImage(OFF,0,0); // blit pre-rendered orbs
+
+    // Cursor glow — only draw when mouse is on screen
+    if (mx > -100) {
+      tx += (mx - tx) * .09; ty += (my - ty) * .09;
+      if (tx < -1000) { tx = mx; ty = my; }
+
+      const g = ctx.createRadialGradient(tx,ty,0,tx,ty,200);
+      g.addColorStop(0,  'rgba(182,156,255,.14)');
+      g.addColorStop(.45,'rgba(142,109,232,.06)');
+      g.addColorStop(1,  'rgba(0,0,0,0)');
+      ctx.beginPath(); ctx.arc(tx,ty,200,0,Math.PI*2);
+      ctx.fillStyle=g; ctx.fill();
+
+      // Velocity streak
+      if (px > -100) {
+        const dx=tx-px, dy=ty-py, spd=Math.sqrt(dx*dx+dy*dy);
+        if (spd > 2.5) {
+          const sg = ctx.createLinearGradient(px,py,tx,ty);
+          const a = Math.min(.2, spd*.007);
+          sg.addColorStop(0,'rgba(182,156,255,0)');
+          sg.addColorStop(1,`rgba(182,156,255,${a})`);
+          ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(tx,ty);
+          ctx.strokeStyle=sg; ctx.lineWidth=Math.min(12,spd*.55);
+          ctx.lineCap='round'; ctx.stroke();
+        }
+      }
+      px=tx; py=ty;
+    }
+  }
+  loop();
+})();
+</script>
+
+<!-- AI CHAT ENGINE -->
+<script>
+(function() {
+  const SYS = `You are a quick helpful assistant embedded in Universium, a browser/unblocker app. Keep replies short and direct — 1-3 sentences unless detail is clearly needed. No disclaimers. No bullet lists unless asked. Plain conversational text.`;
+  let hist = [], busy = false;
+
+  window.toggleAI = function() {
+    const p = document.getElementById('ai-panel');
+    const open = p.classList.toggle('open');
+    if (open) setTimeout(() => document.getElementById('ai-input').focus(), 50);
+  };
+
+  function addMsg(role, text) {
+    const msgs = document.getElementById('ai-msgs');
+    const wrap = document.createElement('div');
+    wrap.className = 'ai-msg ' + (role === 'user' ? 'user' : 'bot');
+    const bub = document.createElement('div');
+    bub.className = 'ai-bubble';
+    bub.textContent = text;
+    wrap.appendChild(bub);
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function typing(show) {
+    const msgs = document.getElementById('ai-msgs');
+    if (show) {
+      const d = document.createElement('div');
+      d.className = 'ai-msg bot'; d.id = '_aiTyp';
+      d.innerHTML = '<div class="ai-bubble ai-typing"><div class="ai-dot-1"></div><div class="ai-dot-2"></div><div class="ai-dot-3"></div></div>';
+      msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+    } else {
+      document.getElementById('_aiTyp')?.remove();
+    }
+  }
+
+  window.aiSend = async function() {
+    const inp = document.getElementById('ai-input');
+    const txt = inp.value.trim();
+    if (!txt || busy) return;
+    inp.value = ''; inp.style.height = '';
+    busy = true; document.getElementById('ai-send').disabled = true;
+    addMsg('user', txt);
+    hist.push({ role:'user', content: txt });
+    typing(true);
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          model:'claude-sonnet-4-6', max_tokens:512,
+          system: SYS, messages: hist
+        })
+      });
+      const data = await res.json();
+      typing(false);
+      const reply = data?.content?.[0]?.text || (data?.error ? 'Error: ' + data.error.message : 'No response.');
+      if (data?.content?.[0]) hist.push({ role:'assistant', content: reply });
+      if (hist.length > 24) hist = hist.slice(-24);
+      addMsg('bot', reply);
+    } catch(e) {
+      typing(false); addMsg('bot', 'Connection error. Try again.');
+    }
+    busy = false; document.getElementById('ai-send').disabled = false;
+    document.getElementById('ai-input').focus();
+  };
+
+  const inp = document.getElementById('ai-input');
+  inp.addEventListener('input', function() { this.style.height=''; this.style.height=Math.min(this.scrollHeight,90)+'px'; });
+  inp.addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); window.aiSend(); } });
+})();
+</script>
+</body>
+</html>
